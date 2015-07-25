@@ -72,33 +72,6 @@ include_once plugin_dir_path(__FILE__).'/include/class-csm-journal-entry.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-shift.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
 
-
-
-add_action('admin_menu', function() {
-  add_menu_page(
-    'CS Manager',
-    'CS Manager',
-    'read',
-    'community-service-manager',
-    'csm_generate_content'
-  );
-});
-
-function csm_generate_content() {
-  global $wpdb;
-  $wpdb->set_dry_run_result(1);
-  $journal = CSM_Journal::get_instance();
-
-  $journal->migrate();
-  echo '<em>Current DB-Version: '.get_option('csm_db_version', 0).'</em>';
-  $wpdb->run_with(function() use ($journal) {
-    $entry = new CSM_JournalEntry(
-      'shift_slug',
-      7200,
-      'volunteer_slug'
-    );
-    $result = $journal->commit($entry);
-    return $result;
-  }, 'dry_run', 'echo') or print('<p class="error">Query failed.</p>');
-}
+if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG)
+  include_once plugin_dir_path(__FILE__).'/test/script-tests.php';
 ?>
