@@ -74,6 +74,7 @@ class CSM_Journal {
             volunteer_slug   varchar(200),
             shift_duration   bigint unsigned NOT NULL,
             volunteers_count tinyint unsigned NOT NULL,
+            is_frozen        tinyint(1) NOT NULL,
             created_at       bigint NOT NULL,
             updated_at       bigint NOT NULL
           ) $query_info->charset_collate;
@@ -204,7 +205,6 @@ class CSM_Journal {
     $row = $journal_entry->get_db_fields();
 
     $table = $this->table_name();
-    $columns = implode(",\n  ", array_keys($row));
     $query = '';
     if($journal_entry->id > 0) {
       $values = $this->mk_query_str($row);
@@ -217,7 +217,15 @@ class CSM_Journal {
           id = ?
       "), $journal_entry->id);
     } else {
-      $values = $wpdb->ez_prepare(str_repeat("?,\n  ", count($row) - 1).'?', $row);
+      $columns = '';
+      $values = '';
+      $separator = ",\n  ";
+      foreach($row as $column => $value) {
+        $columns .= $column.$separator;
+        $values .= $wpdb->ez_prepare('?'.$separator, $value);
+      }
+      $columns = substr($columns, 0, strlen($columns) - strlen($separator));
+      $values = substr($values, 0, strlen($values) - strlen($separator));
       $query = str_reindent("
         INSERT INTO $table (
           $columns

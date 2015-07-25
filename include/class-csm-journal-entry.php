@@ -50,36 +50,36 @@ class CSM_JournalEntry extends ActiveData {
   public function __construct($values=array()) {
     parent::__construct(self::$properties);
     if(is_array($values))
-      $this->set_all($values);
+      $this->set_data($values);
   }
 
-  protected function filter_id() {
-    $this->id = (int) $value;
+  protected function filter_id($value) {
+    return is_null($value) ? null : (int) $value;
   }
   
-  protected function filter_shift_duration() {
+  protected function filter_shift_duration($value) {
     if($value instanceof SimpleTimeInterval)
-      $this->shift_duration = $value;
+      return $value;
     else
-      $this->shift_duration = new SimpleTimeInterval(max(0, (int) $value));
+      return new SimpleTimeInterval(max(0, (int) $value));
   }
 
   protected function filter_shift_slug($value) {
     $this->clear_property('shift');
-    $this->$name = (string) $value;
+    return (string) $value;
   }
 
   protected function filter_volunteer_slug($value) {
     $this->clear_property('volunteer');
-    $this->$name = (string) $value;
+    return (string) $value;
   }
 
   protected function filter_volunteers_count($value) {
-    $this->volunteers_count = max(0, (int) $value);
+    return max(0, (int) $value);
   }
 
   protected function filter_is_frozen($value) {
-    $this->is_frozen = (boolean) $value;
+    return (boolean) $value;
   }
 
   protected function filter_created_at($value) {
@@ -92,15 +92,19 @@ class CSM_JournalEntry extends ActiveData {
 
   protected function filter_date($value) {
     if($value instanceof SimpleDateTime)
-      $this->$name = $value;
+      return $value;
     elseif($value instanceof DateTime)
-      $this->$name = new SimpleDateTime($value);
+      return new SimpleDateTime($value);
     else
-      $this->$name = max(0, (int) $value);
+      return max(0, (int) $value);
   }
 
-  protected function get_shift() {
-    // TODO get shift
+  protected function get_default_id() {
+    return null;
+  }
+
+  protected function get_default_shift() {
+    // TODO get default shift
     return null;
   }
 
@@ -131,7 +135,7 @@ class CSM_JournalEntry extends ActiveData {
     return 0;
   }
 
-  protected function get_db_fields() {
+  public function get_db_fields() {
     return array(
       'id' => $this->id,
       'shift_slug' => $this->shift_slug,
