@@ -69,6 +69,10 @@ if(! class_exists('ActiveData')) {
       );
     }
 
+    protected function get_raw_data() {
+      return $this->data;
+    }
+
     protected function set_raw_data($data) {
       $this->data = $data;
     }
