@@ -20,6 +20,17 @@
 csm_prevent_direct_execution();
 
 class CSM_JournalEntry extends ActiveData {
+  static $properties = array(
+    'id',
+    'shift_slug',
+    'shift_duration',
+    'volunteer_slug',
+    'volunteers_count',
+    'is_frozen',
+    'created_at',
+    'updated_at'
+  );
+
   /**
    * Construct a journal entry from the given information. The additional
    * $details array may contain the following fields:
@@ -36,21 +47,10 @@ class CSM_JournalEntry extends ActiveData {
    * - __updated_at:__ (SimpleDateTime|DateTime|int) The date and time of the
    *   last update.
    */
-
-  static $properties = array(
-    'id',
-    'shift_slug',
-    'shift_duration',
-    'volunteer_slug',
-    'volunteers_count',
-    'is_frozen',
-    'created_at',
-    'updated_at'
-  );
-
   public function __construct($values=array()) {
     parent::__construct(self::$properties);
-    $this->set_all($values);
+    if(is_array($values))
+      $this->set_all($values);
   }
 
   protected function filter_id() {
@@ -110,7 +110,7 @@ class CSM_JournalEntry extends ActiveData {
   }
 
   protected function get_default_volunteers_count() {
-    // TODO get default volunteers count
+    // TODO get default volunteers count -> needs volunteers manager first
     return 0;
   }
 
@@ -127,8 +127,21 @@ class CSM_JournalEntry extends ActiveData {
   }
 
   protected function get_default_shift_duration() {
-    // TODO get default shift duration
+    // TODO get default shift duration -> needs shift first
     return 0;
+  }
+
+  protected function get_db_fields() {
+    return array(
+      'id' => $this->id,
+      'shift_slug' => $this->shift_slug,
+      'shift_duration' => $this->shift_duration->seconds(),
+      'volunteer_slug' => $this->volunteer_slug,
+      'volunteers_count' => $this->volunteers_count,
+      'is_frozen' => $this->is_frozen,
+      'created_at' => $this->created_at->gmtTimestamp(),
+      'updated_at' => $this->updated_at->gmtTimestamp()
+    );
   }
 }
 

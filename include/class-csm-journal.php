@@ -192,56 +192,22 @@ class CSM_Journal {
     return $wpdb->prepare("%d", $constraints['limit']);
   }
 
-  protected function prepare_value_for_db($column, $value) {
-    switch($column) {
-      case 'shift_duration':
-        if(! is_null($value) && $value instanceof SimpleTimeInterval)
-          $value = $value->seconds();
-        return (int) $value;
-      case 'volunteers_count':
-      case 'id':
-        return (int) $value;
-      case 'shift_slug':
-      case 'volunteer_slug':
-        return (string) $value;
-      case 'created_at':
-      case 'updated_at':
-        if(is_int($value))
-          return $value;
-
-        if(is_null($value) || ! $value instanceof SimpleDateTime)
-          $value = new SimpleDateTime();
-
-        return $value->gmtTimestamp();
-      default:
-        trigger_error("Request for spec of unknown column '$column'", E_USER_NOTICE);
-        return null;
-    }
-  }
-
   protected function mk_entry($row) {
     if(is_null($row))
       return null;
 
-    return new CSM_JournalEntry(
-      $row->shift_slug,
-      $row->shift_duration,
-      $row->volunteer_slug,
-      (array) $row
-    );
+    return new CSM_JournalEntry((array) $row);
   }
 
   public function commit($journal_entry) {
     global $wpdb;
-    $row = array_map(function($column) use ($journal_entry) {
-      return $this->prepare_value_for_db($column, $journal_entry->$column);
-    }, $this->table_columns);
+    $row = $journal_entry->get_db_fields();
 
     $table = $this->table_name();
-    $columns = implode(",\n  ", $this->table_columns);
+    $columns = implode(",\n  ", array_keys($row));
     $query = '';
     if($journal_entry->id > 0) {
-      $values = $this->mk_query_str(array_combine($this->table_columns, $row));
+      $values = $this->mk_query_str($row);
       $query = $wpdb->ez_prepare(str_reindent("
         UPDATE
           $table
@@ -249,7 +215,7 @@ class CSM_Journal {
           $values
         WHERE
           id = ?
-      "), (int) $journal_entry->id);
+      "), $journal_entry->id);
     } else {
       $values = $wpdb->ez_prepare(str_repeat("?,\n  ", count($row) - 1).'?', $row);
       $query = str_reindent("
