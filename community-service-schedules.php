@@ -54,7 +54,7 @@ if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
 }
 
 define('CSM_PLUGIN_FILE', __FILE__);
-// include_once plugin_dir_path(__FILE__).'/vendor/class-data-cache.php';
+include_once plugin_dir_path(__FILE__).'/vendor/class-active-data.php';
 // include_once plugin_dir_path(__FILE__).'/vendor/class-simple-calendar-view.php';
 // include_once plugin_dir_path(__FILE__).'/vendor/class-simple-date-time.php';
 // include_once plugin_dir_path(__FILE__).'/vendor/class-simple-html-builder.php';
