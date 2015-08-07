@@ -62,6 +62,7 @@ include_once plugin_dir_path(__FILE__).'/vendor/class-active-data.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-array.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-html.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-str.php';
+require_once plugin_dir_path(__FILE__).'/vendor/php-activerecord/ActiveRecord.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-calendar.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-calendars-controller.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-group.php';
