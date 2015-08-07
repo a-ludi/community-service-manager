@@ -73,5 +73,5 @@ include_once plugin_dir_path(__FILE__).'/include/class-csm-journal-entry.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
 
 if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG)
-  include_once plugin_dir_path(__FILE__).'/test/script-tests.php';
+  include_once plugin_dir_path(__FILE__).'/tests/run-tests.php';
 ?>
