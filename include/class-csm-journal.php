@@ -69,7 +69,7 @@ class CSM_Journal {
       function() use ($wpdb, $query_info) {
         return $wpdb->query("
           CREATE TABLE $query_info->table_name (
-            id               bigint unsigned NOT NULL AUTO_INCREMENT  PRIMARY KEY,
+            id               bigint unsigned NOT NULL  PRIMARY KEY AUTOINCREMENT,
             shift_slug       varchar(200),
             volunteer_slug   varchar(200),
             shift_duration   bigint unsigned NOT NULL,
