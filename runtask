@@ -1,0 +1,204 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+
+function define() {
+  # using '|| true' to exit normally; 'read' does not
+  read -r -d '' "$1" || true
+}
+
+define PHP_HEADER <<EOF
+<?php
+/* Copyright © 2015 Arne Ludwig <arne.ludwig@posteo.de>
+ *
+ * This file is part of Community Service Manager.
+ *
+ * Community Service Manager is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Community Service Manager is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
+ */
+EOF
+
+define PHP_FOOTER <<EOF
+?>
+EOF
+
+function run_task() {
+  TASK="${1:-}"
+  TASK_CALL=""
+  shift
+  case "$TASK" in
+    test)
+      TASK_CALL='run_tests'
+      ;;
+    gen|generate)
+      TARGET="${1:-}"
+      shift
+      case "$TARGET" in
+        test|class)
+          TASK_CALL="generate_$TARGET"
+          ;;
+        *)
+          TASK_CALL='show_help_generate'
+      esac
+      ;;
+    help|*)
+      TOPIC="${1:-}"
+      shift
+      case "$TOPIC" in
+        generate)
+          TASK_CALL="show_help_$TOPIC"
+          ;;
+        *)
+          TASK_CALL='show_help'
+      esac
+      ;;
+  esac
+
+  "$TASK_CALL" "$@"
+}
+
+function show_help() {
+  cat <<'EOF'
+USAGE runtask TASK ARGS...
+
+
+TASKS
+
+test [CASE [TEST]]
+      Run test upon file changes. Runs all test or a specific test case (class
+      CASE) or even a specific test (method TEST) only.
+generate TARGET ARGS...
+      Generate file stubs for different purposes.
+help [TOPIC]
+      Show help (for TOPIC).
+EOF
+}
+
+function show_help_generate() {
+  cat <<'EOF'
+USAGE runtask generate TARGET ARGS...
+
+
+TARGETS
+
+test CATEGORY CLASS
+      Create a test case stub in `tests/CATEGORY` with class name CLASS.
+class CLASS [METHODS...]
+      Create a class stub in `include`. The class will be automatically
+      prefixed with 'CSM_'.
+EOF
+}
+
+function run_tests() {
+  if [[ -n "$1" ]]; then
+    CASE="&c=$1"
+
+    if [[ -n "$2" ]]; then
+      TEST="&t=$2"
+    fi
+  fi
+  FMT='text'
+  QUERY_ARGS="action=csm-tests&f=$FMT$CASE$TEST"
+  QUERY="http://localhost/alpenverein-jena.de/index.php?$QUERY_ARGS"
+  CMD="curl '$QUERY'"
+  FILES='./**/*.{php,yml}'
+  filewatcher++ "$FILES" "$CMD"
+}
+
+function generate_class() {
+  CLASS="${1:-}"
+  shift
+  if [[ -z "$CLASS" ]]; then
+    show_help_generate
+    exit 1
+  fi
+  FNAME="class-csm-$(camel_to_dashed "$CLASS").php"
+  CLASS="CSM_$CLASS"
+  FULL_PATH="include/$FNAME"
+  warn_if_file_exists "$FULL_PATH" || exit 1
+
+  cat > "$FULL_PATH" <<EOF
+${PHP_HEADER}
+
+class $CLASS {
+  public function __construct() {
+    assert(false, 'Call to unimplemented Method $CLASS::__construct().'); // TODO
+  }
+EOF
+  if [[ -n "$@" ]]; then
+    for METHOD in "$@"; do
+      cat >> "$FULL_PATH" <<EOF
+
+  public function $METHOD() {
+    assert(false, 'Call to unimplemented Method $CLASS::$METHOD().'); // TODO
+  }
+EOF
+    done
+  fi 
+  cat >> "$FULL_PATH" <<EOF
+}
+${PHP_FOOTER}
+EOF
+}
+
+function generate_test() {
+  CATEGORY="${1:-}"
+  CLASS="${2:-}"
+  if [[ -z "$CLASS$CATEGORY" ]]; then
+    show_help_generate
+    exit 1
+  fi
+  FNAME="$(camel_to_dashed "$CLASS").php"
+  FULL_PATH="tests/$CATEGORY/$FNAME"
+  warn_if_file_exists "$FULL_PATH" || exit 1
+
+  cat > "$FULL_PATH" <<EOF
+${PHP_HEADER}
+
+class $CLASS extends CSM_UnitTestCase {
+  function __construct() {
+    parent::__construct(array(
+      // TODO place fixture names here
+    ));
+  }
+
+  function setUp() {
+    parent::setUp();
+    // TODO need setup?
+  }
+
+  function test_the_answer_is_fourtytwo() {
+    // TODO write your own tests
+    $this->assertTrue(42);
+  }
+}
+${PHP_FOOTER}
+EOF
+}
+
+function warn_if_file_exists() {
+  if [[ -e "$1" ]]; then
+    echo "File '$1' already exists. Nothing done." >&2
+    return 1
+  else
+    return 0
+  fi
+}
+
+function camel_to_dashed() {
+  echo -n "$(php -r "include 'vendor/functions-str.php'; echo str_camel_to_dashed('$1', false);")"
+}
+
+
+# Actual execution call
+run_task "$@"
