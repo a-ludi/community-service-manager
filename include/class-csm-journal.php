@@ -19,6 +19,10 @@
 
 csm_prevent_direct_execution();
 
+add_action('csm_migrate_db', function() {
+  $journal = CSM_Journal::get_instance();
+  $journal->migrate();
+});
 class CSM_Journal {
   private static $_instance = null;
 
@@ -69,11 +73,11 @@ class CSM_Journal {
       function() use ($wpdb, $query_info) {
         return $wpdb->query("
           CREATE TABLE $query_info->table_name (
-            id               bigint unsigned NOT NULL  PRIMARY KEY AUTOINCREMENT,
-            shift_slug       varchar(200),
-            volunteer_slug   varchar(200),
+            id               bigint unsigned NOT NULL  PRIMARY KEY AUTO_INCREMENT,
+            shift_slug       varchar(200) NOT NULL,
+            volunteer_slug   varchar(200) NOT NULL,
             shift_duration   bigint unsigned NOT NULL,
-            volunteers_count tinyint unsigned NOT NULL,
+            volunteers_count tinyint unsigned,
             is_frozen        tinyint(1) NOT NULL,
             created_at       bigint NOT NULL,
             updated_at       bigint NOT NULL
@@ -122,10 +126,10 @@ class CSM_Journal {
     return true;
   }
 
-  public function drop_table() {
+  public function db_clear() {
     global $wpdb;
     $table_name = $this->table_name();
-    $wpdb->query("DROP TABLE $table_name;");
+    $wpdb->query("DROP TABLE IF EXISTS $table_name;");
 
     $this->set_db_version(0);
     return true;
@@ -137,7 +141,7 @@ class CSM_Journal {
     $columns = implode(",\n  ", $this->table_columns);
     $where_constraints = array_select($constraints, $this->table_columns);
     foreach($where_constraints as $column => $value)
-      $where_constraints[$column] = $this->prepare_value_for_db($column, $value);
+      $where_constraints[$column] = $this->$value;
     $where = $this->mk_query_str($where_constraints);
     $limit = $this->mk_limit_clause($constraints);
 
@@ -206,17 +210,7 @@ class CSM_Journal {
 
     $table = $this->table_name();
     $query = '';
-    if($journal_entry->id > 0) {
-      $values = $this->mk_query_str($row);
-      $query = $wpdb->ez_prepare(str_reindent("
-        UPDATE
-          $table
-        SET
-          $values
-        WHERE
-          id = ?
-      "), $journal_entry->id);
-    } else {
+    if(is_null($row['id'])) {
       $columns = '';
       $values = '';
       $separator = ",\n  ";
@@ -233,6 +227,16 @@ class CSM_Journal {
           $values
         );
       ");
+    } else {
+      $values = $this->mk_query_str($row);
+      $query = $wpdb->ez_prepare(str_reindent("
+        UPDATE
+          $table
+        SET
+          $values
+        WHERE
+          id = ?
+      "), $row['id']);
     }
 
     $result = $wpdb->query($query);
