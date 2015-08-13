@@ -60,8 +60,15 @@ class CSM_JournalEntry extends ActiveData {
   protected function filter_shift_duration($value) {
     if($value instanceof SimpleTimeInterval)
       return $value;
-    else
+
+    elseif((int) $value > 0)
       return new SimpleTimeInterval(max(0, (int) $value));
+    elseif(is_null($value))
+      return null;
+    else {
+      trigger_error(__CLASS__.'::shift_duration must be positive', E_USER_NOTICE);
+      return $this->shift_duration;
+    }
   }
 
   protected function filter_shift_slug($value) {
@@ -75,7 +82,12 @@ class CSM_JournalEntry extends ActiveData {
   }
 
   protected function filter_volunteers_count($value) {
-    return max(0, (int) $value);
+    if((int) $value >= 0) {
+      return (int) $value;
+    } else {
+      trigger_error(__CLASS__.'::volunteers_count must be non-negative', E_USER_NOTICE);
+      return $this->volunteers_count;
+    }
   }
 
   protected function filter_is_frozen($value) {
@@ -83,20 +95,23 @@ class CSM_JournalEntry extends ActiveData {
   }
 
   protected function filter_created_at($value) {
-    return $this->filter_date($value);
+    return $this->filter_date($value, 'created_at');
   }
 
   protected function filter_updated_at($value) {
-    return $this->filter_date($value);
+    return $this->filter_date($value, 'updated_at');
   }
 
-  protected function filter_date($value) {
+  protected function filter_date($value, $property) {
     if($value instanceof SimpleDateTime)
       return $value;
     elseif($value instanceof DateTime)
       return new SimpleDateTime($value);
     else
-      return max(0, (int) $value);
+      trigger_error(
+        'Unexpected value for property '.__CLASS__.'::'.$property,
+        E_USER_NOTICE
+      );
   }
 
   protected function get_default_id() {
@@ -132,7 +147,7 @@ class CSM_JournalEntry extends ActiveData {
 
   protected function get_default_shift_duration() {
     // TODO get default shift duration -> needs shift first
-    return 0;
+    return null;
   }
 
   public function get_db_fields() {
