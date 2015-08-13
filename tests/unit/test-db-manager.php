@@ -126,9 +126,14 @@ class TestDBManager extends CSM_UnitTestCase {
   }
 
   function test_migrate_updates_db_version_on_failure() {
-    $this->db_manager->returns('migrate_third_migration', false);
-    $this->expectSetDBVersion(2);
+    $this->db_manager->returns('migrate_second_migration', false);
+    $this->expectSetDBVersion(1);
     $this->db_manager->migrate();
+  }
+
+  function test_migrate_returns_false_on_failure() {
+    $this->db_manager->returns('migrate_first_migration', false);
+    $this->assertFalse($this->db_manager->migrate());
   }
 
   function test_purge_db_calls_inferiors_method() {
