@@ -26,8 +26,8 @@ class SimpleFixtures {
     $this->stmts = array();
   }
 
-  public function load($tables=null) {
-    if(is_null($tables))
+  public function load($tables) {
+    if('*' === $tables)
       $tables = array_keys($this->fixture_sets);
     elseif(! is_array($tables))
       $tables = array_map('strtolower', func_get_args());
@@ -48,7 +48,7 @@ class SimpleFixtures {
     }
 
     $fixtures = $this->fixture_sets[$table];
-    if(count($fixtures) === 0)
+    if(0 === count($fixtures))
       return 0;
     if(! isset($this->fixture_columns[$table]))
       $this->fixture_columns[$table] = $this->get_fixture_columns($table);
@@ -129,7 +129,7 @@ class SimpleFixtures {
     if(! isset($options['auto_id']) || $options['auto_id'])
       $this->augment_with_auto_id(
         $data,
-        isset($options['auto_id']) ? $options['auto_id'] : 'id'
+        isset($options['id_column']) ? $options['id_column'] : 'id'
       );
     
     if(! isset($options['auto_ref']) || $options['auto_ref'])
@@ -181,23 +181,34 @@ class SimpleFixtures {
   public static function get_auto_id($name) {
     return intval(hash('crc32', $name), 16);
   }
+
+  public function get($table, $row_name=null) {
+    if('*' === $table) {
+      return $this->fixture_sets;
+    } else {
+      $table = strtolower($table);
+      if(is_null($row_name))
+        return isset($this->fixture_sets[$table]) ?
+          $this->fixture_sets[$table] :
+          null;
+      else
+        return isset($this->fixture_sets[$table][$row_name]) ?
+          $this->fixture_sets[$table][$row_name] :
+          null;
+    }
+  }
 }
 
 if(in_array('yaml', get_loaded_extensions())) {
-  class YamlFixtures extends SimpleFixtures {
-    protected $yaml_env = null;
+  class SimpleYamlFixtures extends SimpleFixtures {
+    protected $php_env = null;
 
-    public function enqueue_yaml($yaml_file, $options=array()) {
-      $this->yaml_env = isset($options['yaml_env']) ?
-        $options['yaml_env'] :
+    public function enqueue_yaml($table, $yaml, $options=array()) {
+      $this->php_env = isset($options['php_env']) ?
+        $options['php_env'] :
         null;
       $ndocs = 0;
-      $data = yaml_parse_file(
-        $yaml_file,
-        0,
-        $ndocs,
-        array('!php/eval' => array(__CLASS__, 'cb_yaml_php_eval'))
-      );
+      $data = $this->get_yaml_data($yaml);
       if($ndocs > 1)
         trigger_error(
           "The YAML file constitutes more than one document; ".
@@ -206,22 +217,34 @@ if(in_array('yaml', get_loaded_extensions())) {
         );
 
       parent::enqueue(
-        $this->infer_table_name($yaml_file, $options),
+        $table,
         $data,
         $options
       );
     }
 
-    protected function infer_table_name($yaml_file, $options) {
-      if(isset($options['table']))
-        return $options['table'];
-      else
-        return basename($yaml_file, '.yml');
+    protected function get_yaml_data($yaml) {
+      $ndocs = 0;
+      if(file_exists($yaml)) {
+        return yaml_parse_file(
+          $yaml,
+          0,
+          $ndocs,
+          array('!php/eval' => array(__CLASS__, 'cb_yaml_php_eval'))
+        );
+      } else {
+        return yaml_parse(
+          $yaml,
+          0,
+          $ndocs,
+          array('!php/eval' => array(__CLASS__, 'cb_yaml_php_eval'))
+        );
+      }
     }
 
     public function cb_yaml_php_eval($value, $tag, $flags) {
-      if(! is_null($this->yaml_env))
-        extract($this->yaml_env);
+      if(! is_null($this->php_env))
+        extract($this->php_env);
       return eval($value);
     }
   }
@@ -295,20 +318,24 @@ SQL
         return $test_data;
     }
 
-    public function get_test_file_yaml($table, $fname=null) {
-      if(is_null($fname))
-        $fname = "$table.yml";
-
-      $fname = sys_get_temp_dir()."/$fname";
+    public function get_test_file_yaml($table) {
+      $fname = tempnam(sys_get_temp_dir(), 'yml');
       $fd = fopen($fname, 'w');
       if(! $fd) {
         trigger_error("could not open temporary file `$fname`", E_USER_ERROR);
         return null;
       }
 
+      fwrite($fd, $this->get_test_string_yaml($table));
+      fclose($fd);
+
+      return $fname;
+    }
+
+    public function get_test_string_yaml($table) {
       switch($table) {
         case 'users':
-          fwrite($fd, <<<YAML
+          return(<<<YAML
 bert:
   login: bert
   passwdhash: !php/eval return(md5('sekret'));
@@ -320,55 +347,23 @@ ernie:
   created_at: !php/eval return(\$now - 7*SECS_PER_DAY);
 YAML
           );
-          break;
         case 'user_friends':
-          fwrite($fd, <<<YAML
+          return(<<<YAML
 -
   user_id: &ernie
   friend_id: &bert
 YAML
           );
-          break;
         default:
           return null;
       }
-      fclose($fd);
-
-      return $fname;
     }
   }
 
   define('SECS_PER_DAY', 60*60*24);
+  require_once 'class-micro-unit-tester.php';
 
-  function all(&$arr) {
-    foreach ($arr as $value)
-      if(! $value)
-        return false;
-    return true;
-  }
-
-  function not($bool) {
-    return ! $bool;
-  }
-
-  function assert_error($callback, $error_no=null) {
-    $error = false;
-    $old_error_handler = set_error_handler(function ($curr_error_no, $error_string) use (&$error, $error_no) {
-      $expected = is_null($error_no) || $error_no == $expected_error_no;
-      $error = $error || $expected;
-      $expected or print("Error: $error_string".PHP_EOL);
-    });
-    
-    call_user_func($callback);
-    
-    set_error_handler($old_error_handler);
-
-    return $error;
-  }
-
-  $unitTests = array();
-  
-  $unitTests['Get Auto ID'] = function() {
+  function test_get_auto_id() {
     $auto_id1 = SimpleFixtures::get_auto_id('foobar');
     $auto_id2 = SimpleFixtures::get_auto_id('foobar');
 
@@ -376,9 +371,9 @@ YAML
       'auto_id_is_int' => is_int($auto_id1) && is_int($auto_id2),
       'auto_id_is_deterministic' => $auto_id1 === $auto_id2
     );
-  };
+  }
   
-  $unitTests['Insert Fixtures With Auto ID'] = function() {
+  function test_insert_fixtures_with_auto_id() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('users');
     $fixtures = new SimpleFixtures($dbh);
@@ -388,17 +383,15 @@ YAML
       query('SELECT * FROM users ORDER BY login ASC')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_both_rows' => count($users) === 2,
-      'inserted_bert' => array_diff_key($users[0], array('id' => false)) == $data['bert'],
-      'augmented_with_auto_id' => all(array_map(function($row) {
-        return isset($row['id']) &&
-               $row['id'] == SimpleFixtures::get_auto_id($row['login']);
-      }, $users))
-    );
-  };
+    assert_count($users, 2);
+    assert_equal(array_diff_key($users[0], array('id' => false)), $data['bert']);
+    foreach($users as $row) {
+      assert_true(isset($row['id'])) and
+        assert_equal($row['id'], SimpleFixtures::get_auto_id($row['login']));
+    }
+  }
   
-  $unitTests['Insert Fixtures Without Auto ID'] = function() {
+  function test_insert_fixtures_without_auto_id() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('users');
     $fixtures = new SimpleFixtures($dbh);
@@ -408,17 +401,16 @@ YAML
       query('SELECT * FROM users ORDER BY login ASC')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_both_rows' => count($users) === 2,
-      'inserted_bert' => array_diff_key($users[0], array('id' => false)) == $data['bert'],
-      'sequential_id' => all(array_map(function($row, $seq_id) {
-        return isset($row['id']) &&
-               $row['id'] == $seq_id;
-      }, $users, range(1, count($users))))
-    );
-  };
+    assert_count($users, 2);
+    assert_equal(array_diff_key($users[0], array('id' => false)), $data['bert']);
+    $seq_id = 1;
+    foreach($users as $row) {
+      assert_true(isset($row['id'])) and
+        assert_equal($row['id'], $seq_id++);
+    }
+  }
   
-  $unitTests['Insert Fixtures With Auto Ref'] = function() {
+  function test_insert_fixtures_with_auto_ref() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('user_friends');
     $fixtures = new SimpleFixtures($dbh);
@@ -434,9 +426,9 @@ YAML
         $user_friends[0]['user_id'] == SimpleFixtures::get_auto_id('ernie') &&
         $user_friends[0]['friend_id'] == SimpleFixtures::get_auto_id('bert')
     );
-  };
+  }
   
-  $unitTests['Insert Merged Fixtures'] = function() {
+  function test_insert_merged_fixtures() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('users');
     $fixtures = new SimpleFixtures($dbh);
@@ -451,17 +443,16 @@ YAML
       query('SELECT * FROM users ORDER BY login ASC')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_both_rows' => count($users) === 2,
-      'inserted_bert' => array_diff_key($users[0], array('id' => false)) == $data['bert'],
-      'augmented_with_auto_id' => all(array_map(function($row) {
-        return isset($row['id']) &&
-               $row['id'] == SimpleFixtures::get_auto_id($row['login']);
-      }, $users))
-    );
-  };
+    assert_count($users, 2);
+    assert_equal(array_diff_key($users[0], array('id' => false)), $data['bert']);
+    $seq_id = 1;
+    foreach($users as $row) {
+      assert_true(isset($row['id'])) and
+        assert_equal($row['id'], SimpleFixtures::get_auto_id($row['login']));
+    }
+  }
   
-  $unitTests['Insert Multiple Fixture Sets'] = function() {
+  function test_insert_multiple_fixture_sets() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data();
     $fixtures = new SimpleFixtures($dbh);
@@ -480,12 +471,11 @@ YAML
       query('SELECT * FROM user_friends')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_rows' => count($users) === 2 && count($user_friends) === 1
-    );
-  };
+    assert_count($users, 2);
+    assert_count($user_friends, 1);
+  }
   
-  $unitTests['Insert All Fixture Sets'] = function() {
+  function test_insert_all_fixture_sets() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data();
     $fixtures = new SimpleFixtures($dbh);
@@ -496,7 +486,7 @@ YAML
       array('auto_id' => false)
     );
 
-    $fixtures->load('users', 'user_friends');
+    $fixtures->load('*');
     $users = $dbh->
       query('SELECT * FROM users')->
       fetchAll(PDO::FETCH_ASSOC);
@@ -504,12 +494,11 @@ YAML
       query('SELECT * FROM user_friends')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_rows' => count($users) === 2 && count($user_friends) === 1
-    );
-  };
+    assert_count($users, 2);
+    assert_count($user_friends, 1);
+  }
   
-  $unitTests['Insert Partial Fixture'] = function() {
+  function test_insert_partial_fixture() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('users');
     unset($data['ernie']);
@@ -517,118 +506,126 @@ YAML
     $fixtures = new SimpleFixtures($dbh);
     $fixtures->enqueue('users', $data);
 
-    $fixtures->load();
+    $fixtures->load('users');
     $users = $dbh->
       query('SELECT * FROM users')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_bert' => array_diff_key($users[0], array('id' => false, 'login' => false)) == $data['bert'],
-      'login_is_null' => $users[0]['login'] == null
-    );
-  };
+    assert_equal(array_diff_key($users[0], array('id' => false, 'login' => false)), $data['bert']);
+    assert_null($users[0]['login']);
+  }
   
-  $unitTests['Clears Table Before Insert'] = function() {
+  function test_clears_table_before_insert() {
     $dbh = TestDB::get_instance();
     $data = $dbh->get_test_data('users');
     $fixtures = new SimpleFixtures($dbh);
     $fixtures->enqueue('users', $data);
 
     $dbh->query('INSERT INTO users (login, created_at) VALUES ("cookie_monster", 0)');
-    $fixtures->load();
+    $fixtures->load('users');
     $users = $dbh->
       query('SELECT * FROM users')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'have_two_users' => count($users) === 2,
-      'dont_have_cookie_monster' => all(array_map(function($row) {
-        return $row['login'] != 'cookie_monster';
-      }, $users))
+    assert_count($users, 2);
+    foreach($users as $row)
+      assert_differ($row['login'], 'cookie_monster');
+  }
+  
+  function test_get_fixtures_for_table() {
+    $dbh = TestDB::get_instance();
+    $data = $dbh->get_test_data();
+    $fixtures = new SimpleFixtures($dbh);
+    $fixtures->enqueue(
+      'users',
+      $data['users'],
+      array('auto_id' => false, 'auto_ref' => false)
     );
-  };
+    $fixtures->enqueue(
+      'user_friends',
+      $data['user_friends'],
+      array('auto_id' => false, 'auto_ref' => false)
+    );
+
+    assert_equal($fixtures->get('users'), $data['users']);
+    assert_equal($fixtures->get('user_friends'), $data['user_friends']);
+  }
+  
+  function test_get_fixtures_for_all_tables() {
+    $dbh = TestDB::get_instance();
+    $data = $dbh->get_test_data();
+    $fixtures = new SimpleFixtures($dbh);
+    $fixtures->enqueue(
+      'users',
+      $data['users'],
+      array('auto_id' => false, 'auto_ref' => false)
+    );
+    $fixtures->enqueue(
+      'user_friends',
+      $data['user_friends'],
+      array('auto_id' => false, 'auto_ref' => false)
+    );
+    $retrieved_data = $fixtures->get('*');
+
+    assert_true(isset($retrieved_data['users'])) and
+      assert_equal($retrieved_data['users'], $data['users']);
+    assert_true(isset($retrieved_data['user_friends'])) and
+      assert_equal($retrieved_data['user_friends'], $data['user_friends']);
+  }
 
   if(in_array('yaml', get_loaded_extensions())) {
-    $unitTests['Insert YAML Fixtures With Auto Table'] = function() {
+    function test_insert_yaml_fixtures_from_file() {
       $dbh = TestDB::get_instance();
       $yaml_file = $dbh->get_test_file_yaml('users');
-      $fixtures = new YamlFixtures($dbh);
-      $fixtures->enqueue_yaml($yaml_file, array(
-        'yaml_env' => array('now' => time())
+      $fixtures = new SimpleYamlFixtures($dbh);
+      $fixtures->enqueue_yaml('users', $yaml_file, array(
+        'php_env' => array('now' => time())
       ));
       $fixtures->load('users');
       $users = $dbh->
         query('SELECT * FROM users ORDER BY login ASC')->
         fetchAll(PDO::FETCH_ASSOC);
 
-      return array(
-        'inserted_both_rows' => count($users) === 2,
-        'inserted_bert' => $users[0]['login'] == 'bert'
-      );
-    };
+      assert_count($users, 2);
+      assert_equal($users[0]['login'], 'bert');
+    }
 
-    $unitTests['Insert YAML Fixtures With Manual Table'] = function() {
+    function test_insert_yaml_fixtures_from_string() {
       $dbh = TestDB::get_instance();
-      $yaml_file = $dbh->get_test_file_yaml('users', 'fixtures.yml');
-      $fixtures = new YamlFixtures($dbh);
-      $fixtures->enqueue_yaml($yaml_file, array(
-        'table' => 'users',
-        'yaml_env' => array('now' => time())
+      $yaml_str = $dbh->get_test_string_yaml('users');
+      $fixtures = new SimpleYamlFixtures($dbh);
+      $fixtures->enqueue_yaml('users', $yaml_str, array(
+        'php_env' => array('now' => time())
       ));
       $fixtures->load('users');
       $users = $dbh->
         query('SELECT * FROM users ORDER BY login ASC')->
         fetchAll(PDO::FETCH_ASSOC);
 
-      return array(
-        'inserted_both_rows' => count($users) === 2,
-        'inserted_bert' => $users[0]['login'] == 'bert'
-      );
-    };
+      assert_count($users, 2);
+      assert_equal($users[0]['login'], 'bert');
+    }
 
-    $unitTests['Insert YAML Fixtures With PHP Eval'] = function() {
+    function test_insert_yaml_fixtures_with_php_eval() {
       $dbh = TestDB::get_instance();
       $yaml_file = $dbh->get_test_file_yaml('users');
       $now = time();
-      $fixtures = new YamlFixtures($dbh);
-      $fixtures->enqueue_yaml($yaml_file, array(
-        'yaml_env' => array('now' => $now)
+      $fixtures = new SimpleYamlFixtures($dbh);
+      $fixtures->enqueue_yaml('users', $yaml_file, array(
+        'php_env' => array('now' => $now)
       ));
       $fixtures->load('users');
       $users = $dbh->
         query('SELECT * FROM users ORDER BY login ASC LIMIT 1')->
         fetchAll(PDO::FETCH_ASSOC);
 
-      return array(
-        'evaled_created_at' => $users[0]['created_at'] == $now - 7*SECS_PER_DAY
-      );
-    };
-  }
-
-  
-  $failures = array();
-  $passedCount = 0;
-  foreach($unitTests as $name => $test) {
-    $testResults = call_user_func($test);
-    $hasPassed = is_array($testResults) ? all($testResults) : $testResults;
-    echo $name . ' Test ... ' . ($hasPassed ? 'passed' : 'failed') . PHP_EOL;
-    if($hasPassed)
-       $passedCount++;
-    else
-      $failures[$name] = $testResults;
-  }
-  
-  echo '---' . PHP_EOL;
-  echo 'Passed ' . $passedCount . ' of ' . count($unitTests) . ' tests.' . PHP_EOL;
-  if(count($failures) > 0) {
-    echo PHP_EOL;
-    echo 'Failures:'.PHP_EOL;
-    foreach($failures as $name => $results) {
-      $failedTests = implode(', ', array_keys(array_filter($results, 'not')));
-      echo '  failed in ' . $name . ' test: ' . $failedTests . PHP_EOL;
+      assert_equal($users[0]['created_at'], $now - 7*SECS_PER_DAY);
     }
   }
 
-  exit(count($unitTests) - $passedCount);
+  $tester = new MicroUnitTester();
+  $tester->run_tests();
+
+  exit($tester->failed_tests);
 }
 ?>
