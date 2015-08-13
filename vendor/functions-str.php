@@ -31,6 +31,27 @@
     }
   }
 
+  if(! function_exists('str_camel_to_dashed')) {
+    /**
+     * Convert a name from camel-cased to dashed.
+     */
+    function str_camel_to_dashed($camel_case, $upper_case='auto') {
+      $name_parts = null;
+      preg_match_all('/^[a-z]+|[A-Z][a-z]*|[0-9]+/', $camel_case, $name_parts);
+      if(0 === count($name_parts[0]))
+        return '';
+
+      $fst_char = $name_parts[0][0][0];
+      $name_parts = array_map('strtolower', $name_parts[0]);
+      if(('auto' === $upper_case && strtoupper($fst_char) === $fst_char) ||
+         ('auto' !== $upper_case && $upper_case))
+        $name_parts = array_map('ucfirst', $name_parts);
+
+
+      return join('-', $name_parts);
+    }
+  }
+
   if(! function_exists('str_dashed_to_underscore')) {
     /**
      * Convert a name from dashed to underscore.
