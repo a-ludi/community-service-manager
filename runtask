@@ -154,7 +154,7 @@ EOF
 function generate_test() {
   CATEGORY="${1:-}"
   CLASS="${2:-}"
-  if [[ -z "$CLASS$CATEGORY" ]]; then
+  if [[ -z "$CLASS" || -z "$CATEGORY" ]]; then
     show_help_generate
     exit 1
   fi
