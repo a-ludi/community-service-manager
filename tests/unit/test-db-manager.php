@@ -22,11 +22,12 @@ Mock::generatePartial(
   'CSM_AbstractDBManager',
   'CSM_MockDBManager',
   array(
-    'set_db_version',
-    '_purge_db',
-    'migrate_journal_table',
-    'migrate_add_id_to_journal',
-    'migrate_remove_id_from_journal'
+    // additional methods in subclass
+    'do_purge_db',
+    'migrate_first_migration',
+    'migrate_second_migration',
+    'migrate_third_migration',
+    'migrate_fourth_migration'
   )
 );
 Mock::generate('wpdb', 'mock_wpdb');
@@ -55,8 +56,25 @@ class TestDBManager extends CSM_UnitTestCase {
   function setUp() {
     parent::setUp();
     $this->db_manager = new CSM_MockDBManager();
+    $this->db_manager->returns('migrate_first_migration', true);
+    $this->db_manager->returns('migrate_second_migration', true);
+    $this->db_manager->returns('migrate_third_migration', true);
+    $this->db_manager->returns('migrate_fourth_migration', true);
     $this->mock_wpdb = new mock_wpdb();
     $this->use_wpdb('mock');
+  }
+
+  function expectSetDBVersion($version='*', $msg=null) {
+    if(is_null($msg))
+      $msg = "Expected sets db version to [$version]";
+
+    $this->wpdb->expectOnce(
+      'query',
+      array(
+        new PatternExpectation("/csm_db_version[[:blank:]]*=[[:blank:]]*$version/")
+      ),
+      $msg
+    );
   }
 
   function test_db_migrator_exists() {
@@ -85,44 +103,42 @@ class TestDBManager extends CSM_UnitTestCase {
     $this->assertIsA($this->db_manager->db_version(), 'int');
   }
 
-  function test_migrate_calls_migrations() {
-    $this->db_manager->expectOnce('migrate_journal_table');
-    $this->db_manager->expectOnce('migrate_add_id_to_journal');
-    $this->db_manager->expectOnce('migrate_remove_id_from_journal');
+  function test_migrate_calls_migrations_in_correct_order() {
+    $this->db_manager->expectAt(0, 'migrate_first_migration', array());
+    $this->db_manager->expectAt(1, 'migrate_second_migration', array());
+    $this->db_manager->expectAt(2, 'migrate_third_migration', array());
+    $this->db_manager->expectAt(3, 'migrate_fourth_migration', array());
     $this->db_manager->migrate();
   }
 
   function test_migrate_updates_db_version() {
-    $this->db_manager->expectOnce('set_db_version', array(3));
-    $this->db_manager->migrate();
-  }
-
-  function test_migrate_stores_db_version() {
-    $this->wpdb->expectOnce(
-      'query',
-      array(
-        new PatternExpectation('/csm_db_version[[:blank:]]*=[[:blank:]]*3/')
-      )
-    );
+    $this->expectSetDBVersion(3);
     $this->db_manager->migrate();
   }
 
   function test_migrate_stops_on_failure() {
-    $this->db_manager->expectOnce('migrate_journal_table');
-    $this->db_manager->expectOnce('migrate_add_id_to_journal');
-    $this->db_manager->returns('migrate_add_id_to_journal', false);
-    $this->db_manager->expectNever('migrate_remove_id_from_journal');
+    $this->db_manager->expectOnce('migrate_first_migration');
+    $this->db_manager->expectOnce('migrate_second_migration');
+    $this->db_manager->returns('migrate_second_migration', false);
+    $this->db_manager->expectNever('migrate_third_migration');
+    $this->db_manager->expectNever('migrate_fourth_migration');
+    $this->db_manager->migrate();
+  }
+
+  function test_migrate_updates_db_version_on_failure() {
+    $this->db_manager->returns('migrate_third_migration', false);
+    $this->expectSetDBVersion(2);
     $this->db_manager->migrate();
   }
 
   function test_purge_db_calls_inferiors_method() {
-    $this->db_manager->expectOnce('_purge_db');
+    $this->db_manager->expectOnce('do_purge_db');
     $this->db_manager->purge_db();
   }
 
   function test_purge_db_resets_db_version() {
     $this->db_manager->purge_db();
-    $this->db_manager->expectOnce('set_db_version', array(0));
+    $this->expectSetDBVersion(0);
   }
 }
 ?>
