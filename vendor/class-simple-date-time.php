@@ -46,7 +46,7 @@ if(! class_exists('SimpleDateTime')) {
         return $timezone;
       elseif(defined('WPINC') && function_exists('get_option'))
         // Try to get the current timezone from WordPress
-        return getWordPressTimezone();
+        return self::getWordPressTimezone();
       else
         // Fallback to PHP's utitilties.
         return new DateTimeZone(date_default_timezone_get());
