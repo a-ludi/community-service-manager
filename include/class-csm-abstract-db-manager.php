@@ -22,14 +22,24 @@ abstract class CSM_AbstractDBManager {
     assert(false, 'Call to unimplemented Method CSM_AbstractDbManager::__construct().'); // TODO
   }
 
+  /**
+   * Returns the version of the current database schema.
+   */
   public function db_version() {
     assert(false, 'Call to unimplemented Method CSM_AbstractDbManager::db_version().'); // TODO
   }
 
-  protected function set_db_version() {
-    assert(false, 'Call to unimplemented Method CSM_AbstractDbManager::db_version().'); // TODO
-  }
-
+  /**
+   * Runs all pending migrations. The migrations will be run in order of
+   * definition and the database version is increased for every successful
+   * migration. If a migration fails the database version will not be
+   * increased and a boolean false will be returned.
+   *
+   * __Migration:__ A migration is a method beginning with 'migrate'. It takes
+   * no arguments and returns a boolean to indicate the success status. A
+   * migration is pending iff. its position (beginning with `1`) is greater
+   * than the current database version.
+   */
   public function migrate() {
     assert(false, 'Call to unimplemented Method CSM_AbstractDbManager::migrate().'); // TODO
   }
