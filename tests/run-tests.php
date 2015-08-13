@@ -17,34 +17,25 @@
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once(dirname(__FILE__).'/../community-service-manager.php');
-require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/unit_tester.php');
-require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/mock_objects.php');
-require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/collector.php');
-require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/default_reporter.php');
+if(version_compare(phpversion(), '5.4.0', '<')) {
+  add_action('wp_loaded', function() {
+    if(array_get($_REQUEST, 'action') !== 'csm-tests')
+      return;
 
-class CSM_AllTests extends TestSuite {
-  function __construct() {
-    parent::__construct('CSM All Tests');
-    $this->addFile('unit/test-journal-entry.php');
-  }
+    die("You need PHP version >=5.4.0 to run the test suite.");
+  });
+} else {
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/unit_tester.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/mock_objects.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/collector.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/default_reporter.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/class-simple-fixtures.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/trait-date-time-assertions.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-unit-test-case.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-test-suite.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-unit-tests.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/functions.php');
 
-  function addFile($path) {
-    parent::addFile(plugin_dir_path(CSM_PLUGIN_FILE).'tests/'.$path);
-  }
+  add_action('wp_loaded', 'csm_run_all_tests');
 }
-
-add_action('wp_loaded', function() {
-  if(array_get($_REQUEST, 'action') !== 'csm-tests')
-    return;
-
-  $suite = new CSM_AllTests();
-  $reporter = new SelectiveReporter(
-    SimpleTest::preferred('TextReporter'),
-    @$_GET['c'],
-    @$_GET['t']
-  );
-  $suite->run(new SimpleReporterDecorator($reporter));
-  die();
-});
 ?>
