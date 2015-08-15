@@ -34,7 +34,6 @@ if(! function_exists('csm_prevent_direct_execution')) {
     defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
   }
 }
-csm_prevent_direct_execution();
 
 if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
   if(defined('CSM_LOG_FILE') && '' != CSM_LOG_FILE) {
