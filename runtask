@@ -270,17 +270,19 @@ EOF
 }
 
 function generate_test() {
-  CATEGORY="${1:-}"
-  CLASS="${2:-}"
-  if [[ -z "$CLASS" ]]; then
+  CATEGORY="$(peek_params)"
+  shift_params
+  CLASS="$(peek_params)"
+  shift_params
+  if [[ -z "$CATEGORY" ]]; then
     set_error 'missing CLASS'
-  elif [[ -z "$CATEGORY" ]]; then
+  elif [[ -z "$CLASS" ]]; then
     set_error 'missing CATEGORY'
   fi
   FNAME="$(camel_to_dashed "$CLASS").php"
   FULL_PATH="tests/$CATEGORY/$FNAME"
   has_flag 'force' ||
-    { warn_if_file_exists "$FULL_PATH" && exit 1; }
+    { warn_if_file_exists "$FULL_PATH" && return; }
 
   cat > "$FULL_PATH" <<EOF
 ${PHP_HEADER}
