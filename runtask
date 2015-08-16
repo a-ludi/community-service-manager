@@ -34,54 +34,70 @@ define PHP_FOOTER <<EOF
 EOF
 
 function run_task() {
-  TASK="$(shift_params)"
+  TASK="$(peek_params)"
+  shift_params
   TASK_CALL=""
   case "$TASK" in
     test)
       TASK_CALL='run_tests'
       ;;
     gen|generate)
-      TARGET="$(shift_params)"
+      TARGET="$(peek_params)"
+      shift_params
       case "$TARGET" in
         test|class)
           TASK_CALL="generate_$TARGET"
           ;;
         *)
+          set_error "unknown target `$TARGET`"
           TASK_CALL='show_help_generate'
       esac
       ;;
-    help|*)
-      TOPIC="$(shift_params)"
+    help)
+      TOPIC="$(peek_params)"
+      shift_params
       case "$TOPIC" in
         generate|test)
           TASK_CALL="show_help_$TOPIC"
           ;;
         *)
+          set_error "unknown topic `$TOPIC`"
           TASK_CALL='show_help'
       esac
+      ;;
+    *)
+      set_error "unknown task `$TASK`"
+      TASK_CALL='show_help'
       ;;
   esac
 
   "$TASK_CALL" "$@"
+  if has_flag 'error'; then
+    echo "$ERROR_MSG" >&2
+    return 1
+  fi
 }
 
 function fetch_flags() {
   FLAGS=''
-  for FLAG in "${PARAMS[@]}"; do
-    case "$FLAG" in
+  while peek_params > /dev/null; do
+    case "$(peek_params)" in
       -f|--force)
-        FLAGS="$FLAGS force"
-        shift_params > /dev/null
+        add_flag 'force'
         ;;
       -w|--watch)
-        FLAGS="$FLAGS watch"
-        shift_params > /dev/null
+        add_flag 'watch'
         ;;
       *)
         return
         ;;
     esac
+    shift_params
   done
+}
+
+function add_flag() {
+  FLAGS="$FLAGS $@"
 }
 
 function has_flag() {
@@ -89,17 +105,22 @@ function has_flag() {
   [[ "$FLAGS" =~ $RE ]] || return 1
 }
 
+function set_error() {
+  add_flag 'error'
+  ERROR_MSG="error: $@"
+}
+
 function shift_params() {
-  local PARAM="${PARAMS[0]:-${1:-}}"
   unset PARAMS[0]
-  PARAMS=(${PARAMS[@]})
-  echo "$PARAM"
+  PARAMS=("${PARAMS[@]}")
 
   [[ ${#PARAMS[*]} -gt 0 ]] || return 1
 }
 
 function peek_params() {
   echo "${PARAMS[0]:-${1:-}}"
+
+  [[ ${#PARAMS[*]} -gt 0 ]] || return 1
 }
 
 function show_help() {
@@ -107,7 +128,7 @@ function show_help() {
 USAGE runtask FLAGS TASK ARGS...
 
 Execute TASK for this project. See TASKS below for a listing of avaible tasks
-and use \`runtask help TASK\` for additional information.
+and use `runtask help TASK` for additional information.
 
 
 FLAGS
@@ -172,10 +193,12 @@ EOF
 function run_tests() {
   QUERY='action=csm-tests&f=text';
   if [[ -n "$(peek_params)" ]]; then
-    QUERY="$QUERY&c=$(shift_params)"
+    QUERY="$QUERY&c=$(peek_params)"
+    shift_params
 
     if [[ -n "$(peek_params)" ]]; then
-      QUERY="$QUERY&t=$(shift_params)"
+      QUERY="$QUERY&t=$(peek_params)"
+      shift_params
     fi
   fi
 
@@ -210,17 +233,17 @@ function watch_files() {
 }
 
 function generate_class() {
-  CLASS="${1:-}"
-  shift
+  CLASS="$(peek_params)"
+  shift_params
   if [[ -z "$CLASS" ]]; then
-    show_help_generate
-    exit 1
+    set_error "missing CLASS"
+    return
   fi
   FNAME="class-csm-$(camel_to_dashed "$CLASS").php"
   CLASS="CSM_$CLASS"
   FULL_PATH="include/$FNAME"
   has_flag 'force' ||
-    { warn_if_file_exists "$FULL_PATH" && exit 1; }
+    { warn_if_file_exists "$FULL_PATH" && return; }
 
   cat > "$FULL_PATH" <<EOF
 ${PHP_HEADER}
@@ -249,9 +272,10 @@ EOF
 function generate_test() {
   CATEGORY="${1:-}"
   CLASS="${2:-}"
-  if [[ -z "$CLASS" || -z "$CATEGORY" ]]; then
-    show_help_generate
-    exit 1
+  if [[ -z "$CLASS" ]]; then
+    set_error 'missing CLASS'
+  elif [[ -z "$CATEGORY" ]]; then
+    set_error 'missing CATEGORY'
   fi
   FNAME="$(camel_to_dashed "$CLASS").php"
   FULL_PATH="tests/$CATEGORY/$FNAME"
@@ -284,7 +308,7 @@ EOF
 
 function warn_if_file_exists() {
   if [[ -e "$1" ]]; then
-    echo "File '$1' already exists. Nothing done." >&2
+    set_error "file '$1' already exists. Nothing done." >&2
     return 0
   else
     return 1
