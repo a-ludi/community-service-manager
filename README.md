@@ -36,7 +36,7 @@ required software:
 
 1. Execute in a shell
    ```bash
-   sudo apt-get install apache2 mysql-server mysql-client phpmyadmin php5 php5-cli php5-xdebug php-pear
+   sudo apt-get install apache2 mysql-server mysql-client phpmyadmin php5 php5-cli php5-xdebug php-pear libyaml-0-2 libyaml-dev
    sudo pecl install yaml
    ```
 2. Download WordPress and extract it into your web server's document root
