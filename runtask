@@ -26,6 +26,7 @@ define PHP_HEADER <<EOF
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 EOF
 
 define PHP_FOOTER <<EOF
@@ -33,16 +34,14 @@ define PHP_FOOTER <<EOF
 EOF
 
 function run_task() {
-  TASK="${1:-}"
+  TASK="$(shift_params)"
   TASK_CALL=""
-  shift
   case "$TASK" in
     test)
       TASK_CALL='run_tests'
       ;;
     gen|generate)
-      TARGET="${1:-}"
-      shift
+      TARGET="$(shift_params)"
       case "$TARGET" in
         test|class)
           TASK_CALL="generate_$TARGET"

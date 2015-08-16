@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 
 class TestJournalEntry extends CSM_UnitTestCase {
   use DateTimeAssertions;

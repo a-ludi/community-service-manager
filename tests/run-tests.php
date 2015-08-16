@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 
 if(version_compare(phpversion(), '5.4.0', '<')) {
   add_action('wp_loaded', function() {
