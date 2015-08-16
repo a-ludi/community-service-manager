@@ -46,7 +46,7 @@ abstract class CSM_UnitTestCase extends UnitTestCase {
 
       $fixture_files = preg_grep('/.*\.yml$/', scandir(self::$fixture_dir));
       foreach($fixture_files as $fixture_file) {
-        $table = 'wp_csm_'.basename($fixture_file, '.yml');
+        $table = basename($fixture_file, '.yml');
         self::$_fixtures->enqueue_yaml(
           $table,
           self::$fixture_dir.$fixture_file,
