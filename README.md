@@ -9,7 +9,7 @@ services.
 
 
 Development Environment
-=======================
+-----------------------
 
 The development environment for CSM requires:
 
@@ -29,25 +29,29 @@ This list may be incomplete but will be extended if required. The version
 numbers are not strictly required but using these version should work.
 
 
-Debian-based OS
----------------
+### Debian-based OS
 
 On a Debian-based OS you will require the following steps to install the
 required software:
 
 1. Execute in a shell
-   ```
+   ```bash
    sudo apt-get install apache2 mysql-server mysql-client phpmyadmin php5 php5-cli php5-xdebug php-pear
    sudo pecl install yaml
    ```
 2. Download WordPress and extract it into your web server's document root
    (usually this is `/var/www/`).
 3. Configure Apache, PHP, MySQL and WordPress (more Details follow)
-4. Fetch a copy of `db.php` and drop it in your `ABSPATH/wp-content` folder by
+4. Fetch a copy of `db.php` and drop it in your `$WP_ROOT/wp-content` folder by
    either:
     - downloading the file directly and copying it into your WP installation
-    - cloning the Gist using `git` and linking the file into your WP
-      installation (easy update via `git pull`)
+    - cloning the Gist using and linking the file into your WP
+      installation:
+      ```bash
+      git clone https://gist.github.com/354de07403192e64c456.git wpdb_debug
+      ln -s wpdb_debug/db.php $WP_ROOT/wp-content/db.php
+      ```
+      Updates can be included with `git pull`.
 5. To be continued…
 
 
