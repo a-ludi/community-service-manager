@@ -31,7 +31,7 @@ class TestDBManager extends CSM_UnitTestCase {
 
   function test_the_answer_is_fourtytwo() {
     // TODO write your own tests
-    ->assertTrue(42);
+    $this->assertTrue(42);
   }
 }
 ?>

@@ -26,6 +26,7 @@ define PHP_HEADER <<EOF
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 EOF
 
 define PHP_FOOTER <<EOF
@@ -33,16 +34,14 @@ define PHP_FOOTER <<EOF
 EOF
 
 function run_task() {
-  TASK="${1:-}"
+  TASK="$(shift_params)"
   TASK_CALL=""
-  shift
   case "$TASK" in
     test)
       TASK_CALL='run_tests'
       ;;
     gen|generate)
-      TARGET="${1:-}"
-      shift
+      TARGET="$(shift_params)"
       case "$TARGET" in
         test|class)
           TASK_CALL="generate_$TARGET"
@@ -52,10 +51,9 @@ function run_task() {
       esac
       ;;
     help|*)
-      TOPIC="${1:-}"
-      shift
+      TOPIC="$(shift_params)"
       case "$TOPIC" in
-        generate)
+        generate|test)
           TASK_CALL="show_help_$TOPIC"
           ;;
         *)
@@ -67,9 +65,57 @@ function run_task() {
   "$TASK_CALL" "$@"
 }
 
+function fetch_flags() {
+  FLAGS=''
+  for FLAG in "${PARAMS[@]}"; do
+    case "$FLAG" in
+      -f|--force)
+        FLAGS="$FLAGS force"
+        shift_params > /dev/null
+        ;;
+      -w|--watch)
+        FLAGS="$FLAGS watch"
+        shift_params > /dev/null
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+}
+
+function has_flag() {
+  RE='\b'"$1"'\b'
+  [[ "$FLAGS" =~ $RE ]] || return 1
+}
+
+function shift_params() {
+  local PARAM="${PARAMS[0]:-${1:-}}"
+  unset PARAMS[0]
+  PARAMS=(${PARAMS[@]})
+  echo "$PARAM"
+
+  [[ ${#PARAMS[*]} -gt 0 ]] || return 1
+}
+
+function peek_params() {
+  echo "${PARAMS[0]:-${1:-}}"
+}
+
 function show_help() {
   cat <<'EOF'
-USAGE runtask TASK ARGS...
+USAGE runtask FLAGS TASK ARGS...
+
+Execute TASK for this project. See TASKS below for a listing of avaible tasks
+and use \`runtask help TASK\` for additional information.
+
+
+FLAGS
+
+-f, --force  [generate]
+      Force overwriting of existing files.
+-w, --watch  [test]
+      Watch the source files for changes and execute tests accordingly.
 
 
 TASKS
@@ -84,9 +130,33 @@ help [TOPIC]
 EOF
 }
 
+function show_help_test() {
+  cat <<'EOF'
+USAGE runtask [-w] test [CASE [TEST]]
+
+Run test upon file changes. Runs all test or a specific test case (class CASE)
+or even a specific test (method TEST) only.
+
+
+FLAGS
+
+-w, --watch
+      Watch the source files for changes and execute tests accordingly.
+EOF
+}
+
 function show_help_generate() {
   cat <<'EOF'
-USAGE runtask generate TARGET ARGS...
+USAGE runtask [-f] generate TARGET ARGS...
+
+Generate different stub files already including licensing information and
+direct execution prevention.
+
+
+FLAGS
+
+-f, --force
+      Force overwriting of existing files.
 
 
 TARGETS
@@ -100,19 +170,43 @@ EOF
 }
 
 function run_tests() {
-  if [[ -n "$1" ]]; then
-    CASE="&c=$1"
+  QUERY='action=csm-tests&f=text';
+  if [[ -n "$(peek_params)" ]]; then
+    QUERY="$QUERY&c=$(shift_params)"
 
-    if [[ -n "$2" ]]; then
-      TEST="&t=$2"
+    if [[ -n "$(peek_params)" ]]; then
+      QUERY="$QUERY&t=$(shift_params)"
     fi
   fi
-  FMT='text'
-  QUERY_ARGS="action=csm-tests&f=$FMT$CASE$TEST"
-  QUERY="http://localhost/alpenverein-jena.de/index.php?$QUERY_ARGS"
-  CMD="curl '$QUERY'"
-  FILES='./**/*.{php,yml}'
-  filewatcher++ "$FILES" "$CMD"
+
+  URL='http://localhost/alpenverein-jena.de/index.php'"?$QUERY"
+  CMD='curl'
+  FILES=(
+    {include,tests,vendor}'/**/*.php'
+    'tests/fixtures/*.yml'
+    'runtask'
+    'community-service-manager.php'
+  );
+
+  if has_flag 'watch'; then
+    watch_files "$CMD '$URL'" "${FILES[@]}"
+  else
+    "$CMD" "$URL"
+  fi
+}
+
+function watch_files() {
+  CMD="$1"
+  shift
+  if which 'filewatcher++' &> /dev/null; then
+    filewatcher++ "$@" "$CMD"
+  elif which 'filewatcher' &> /dev/null; then
+    filewatcher "$@" "$CMD"
+  else
+    echo "Could not watch files: no watching utility found." >&2
+    echo "Hint: remove the -w/--watch flag to execute the tests once" >&2
+    exit 1
+  fi
 }
 
 function generate_class() {
@@ -125,7 +219,8 @@ function generate_class() {
   FNAME="class-csm-$(camel_to_dashed "$CLASS").php"
   CLASS="CSM_$CLASS"
   FULL_PATH="include/$FNAME"
-  warn_if_file_exists "$FULL_PATH" || exit 1
+  has_flag 'force' ||
+    { warn_if_file_exists "$FULL_PATH" && exit 1; }
 
   cat > "$FULL_PATH" <<EOF
 ${PHP_HEADER}
@@ -154,13 +249,14 @@ EOF
 function generate_test() {
   CATEGORY="${1:-}"
   CLASS="${2:-}"
-  if [[ -z "$CLASS$CATEGORY" ]]; then
+  if [[ -z "$CLASS" || -z "$CATEGORY" ]]; then
     show_help_generate
     exit 1
   fi
   FNAME="$(camel_to_dashed "$CLASS").php"
   FULL_PATH="tests/$CATEGORY/$FNAME"
-  warn_if_file_exists "$FULL_PATH" || exit 1
+  has_flag 'force' ||
+    { warn_if_file_exists "$FULL_PATH" && exit 1; }
 
   cat > "$FULL_PATH" <<EOF
 ${PHP_HEADER}
@@ -189,9 +285,9 @@ EOF
 function warn_if_file_exists() {
   if [[ -e "$1" ]]; then
     echo "File '$1' already exists. Nothing done." >&2
-    return 1
-  else
     return 0
+  else
+    return 1
   fi
 }
 
@@ -199,6 +295,6 @@ function camel_to_dashed() {
   echo -n "$(php -r "include 'vendor/functions-str.php'; echo str_camel_to_dashed('$1', false);")"
 }
 
-
-# Actual execution call
-run_task "$@"
+PARAMS=("$@")
+fetch_flags
+run_task

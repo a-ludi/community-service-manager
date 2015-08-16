@@ -34,7 +34,6 @@ if(! function_exists('csm_prevent_direct_execution')) {
     defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
   }
 }
-csm_prevent_direct_execution();
 
 if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
   if(defined('CSM_LOG_FILE') && '' != CSM_LOG_FILE) {
@@ -74,6 +73,6 @@ include_once plugin_dir_path(__FILE__).'/include/class-csm-db-manager.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-shift.php';
 // include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
 
-if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG)
+if(defined('WP_DEBUG') && true === WP_DEBUG)
   include_once plugin_dir_path(__FILE__).'/tests/run-tests.php';
 ?>
