@@ -22,6 +22,7 @@
 
 if(! class_exists('SimpleDateTime')) {
   class SimpleDateTime extends DateTime {
+    const SQL_FORMAT = 'Y-m-d H:i:s';
     private static $defaultTimezone;
 
     public function __construct($timeOrDateTime="now", $timezone=null) {

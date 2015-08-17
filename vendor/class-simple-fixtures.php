@@ -71,9 +71,16 @@ class SimpleFixtures {
         "Could not clear table `$table`: ".$this->build_error_msg(),
         E_USER_WARNING
       );
-    foreach($fixtures as $fixture) {
-      $row = $this->prepare_row_from_fixture($fixture);
-      $this->stmts[$table]->execute($row);
+    foreach($fixtures as $fixture_name => $fixture_data) {
+      $row = $this->prepare_row_from_fixture($fixture_data);
+      var_dump($this->stmts[$table], $row);
+      if(! $this->stmts[$table]->execute($row)) {
+        trigger_error(
+          "Could not insert row `$fixture_name` into table `$table`: ".
+            $this->build_error_msg($this->stmts[$table]),
+          E_USER_WARNING
+        );
+      }
     }
     $this->dbh->commit();
   }

@@ -26,10 +26,10 @@ if(version_compare(phpversion(), '5.4.0', '<')) {
     die("You need PHP version >=5.4.0 to run the test suite.");
   });
 } else {
-  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/unit_tester.php');
-  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/mock_objects.php');
-  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/collector.php');
-  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simple-test/default_reporter.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simpletest/unit_tester.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simpletest/mock_objects.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simpletest/collector.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/simpletest/default_reporter.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/vendor/class-simple-fixtures.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/trait-date-time-assertions.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-unit-test-case.php');
