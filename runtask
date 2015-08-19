@@ -125,7 +125,7 @@ function peek_params() {
 
 function show_help() {
   cat <<'EOF'
-USAGE runtask FLAGS TASK ARGS...
+USAGE runtask [-fw] TASK ARGS...
 
 Execute TASK for this project. See TASKS below for a listing of avaible tasks
 and use `runtask help TASK` for additional information.
