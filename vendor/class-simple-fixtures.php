@@ -73,7 +73,6 @@ class SimpleFixtures {
       );
     foreach($fixtures as $fixture_name => $fixture_data) {
       $row = $this->prepare_row_from_fixture($fixture_data);
-      var_dump($this->stmts[$table], $row);
       if(! $this->stmts[$table]->execute($row)) {
         trigger_error(
           "Could not insert row `$fixture_name` into table `$table`: ".
