@@ -54,24 +54,21 @@ if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
 
 define('CSM_PLUGIN_FILE', __FILE__);
 include_once plugin_dir_path(__FILE__).'/vendor/class-active-data.php';
-// include_once plugin_dir_path(__FILE__).'/vendor/class-simple-calendar-view.php';
+include_once plugin_dir_path(__FILE__).'/vendor/class-simple-html-builder.php';
+include_once plugin_dir_path(__FILE__).'/vendor/class-simple-calendar-view.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-date-time.php';
-// include_once plugin_dir_path(__FILE__).'/vendor/class-simple-html-builder.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-time-interval.php';
+include_once plugin_dir_path(__FILE__).'/vendor/class-simple-fixtures.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-array.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-html.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-str.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-calendar.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-calendars-controller.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-group.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-groups-controller.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-journal.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-journal-entry.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-abstract-db-manager.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-db-manager.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-schedule.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-shift.php';
-// include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
+include_once plugin_dir_path(__FILE__).'/include/class-csm-person.php';
+include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
+include_once plugin_dir_path(__FILE__).'/include/class-csm-coordinator.php';
 
 if(defined('WP_DEBUG') && true === WP_DEBUG)
   include_once plugin_dir_path(__FILE__).'/tests/run-tests.php';
