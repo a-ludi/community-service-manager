@@ -33,6 +33,13 @@ define PHP_FOOTER <<EOF
 ?>
 EOF
 
+SOURCE_FILES=(
+  {include,tests,vendor}'/**/*.php'
+  'tests/fixtures/*.yml'
+  'runtask'
+  'community-service-manager.php'
+);
+
 function run_task() {
   TASK="$(peek_params)"
   shift_params
@@ -53,11 +60,14 @@ function run_task() {
           TASK_CALL='show_help_generate'
       esac
       ;;
+    watch)
+      TASK_CALL='watch_command'
+      ;;
     help)
       TOPIC="$(peek_params)"
       shift_params
       case "$TOPIC" in
-        generate|test)
+        generate|test|watch)
           TASK_CALL="show_help_$TOPIC"
           ;;
         *)
@@ -148,6 +158,8 @@ generate TARGET ARGS...
       Generate file stubs for different purposes.
 help [TOPIC]
       Show help (for TOPIC).
+watch COMMAND
+      Watch source files for chages and execute COMMAND accordingly.
 EOF
 }
 
@@ -190,6 +202,16 @@ class CLASS [METHODS...]
 EOF
 }
 
+function show_help_watch() {
+  cat <<'EOF'
+USAGE runtask watch COMMAND
+
+Watch source files for chages and execute COMMAND accordingly. Occurrences
+of $FILENAME in COMMAND will be replaced with the name of the file that has
+changed.
+EOF
+}
+
 function run_tests() {
   QUERY='action=csm-tests&f=text';
   if [[ -n "$(peek_params)" ]]; then
@@ -204,31 +226,11 @@ function run_tests() {
 
   URL='http://localhost/alpenverein-jena.de/index.php'"?$QUERY"
   CMD='curl'
-  FILES=(
-    {include,tests,vendor}'/**/*.php'
-    'tests/fixtures/*.yml'
-    'runtask'
-    'community-service-manager.php'
-  );
 
   if has_flag 'watch'; then
-    watch_files "$CMD '$URL'" "${FILES[@]}"
+    watch_files "$CMD '$URL'" "${SOURCE_FILES[@]}"
   else
     "$CMD" "$URL"
-  fi
-}
-
-function watch_files() {
-  CMD="$1"
-  shift
-  if which 'filewatcher++' &> /dev/null; then
-    filewatcher++ "$@" "$CMD"
-  elif which 'filewatcher' &> /dev/null; then
-    filewatcher "$@" "$CMD"
-  else
-    echo "Could not watch files: no watching utility found." >&2
-    echo "Hint: remove the -w/--watch flag to execute the tests once" >&2
-    exit 1
   fi
 }
 
@@ -306,6 +308,26 @@ class $CLASS extends CSM_UnitTestCase {
 }
 ${PHP_FOOTER}
 EOF
+}
+
+function watch_command() {
+  COMMAND="$(peek_params)"
+  shift_params
+  watch_files "$COMMAND" "${SOURCE_FILES[@]}"
+}
+
+function watch_files() {
+  CMD="$1"
+  shift
+  if which 'filewatcher++' &> /dev/null; then
+    filewatcher++ "$@" "$CMD"
+  elif which 'filewatcher' &> /dev/null; then
+    filewatcher "$@" "$CMD"
+  else
+    echo "Could not watch files: no watching utility found." >&2
+    echo "Hint: remove the -w/--watch flag to execute the tests once" >&2
+    exit 1
+  fi
 }
 
 function warn_if_file_exists() {
