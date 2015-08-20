@@ -4,8 +4,8 @@ journal_entry1:
     shift_duration: 3600
     volunteers_count: 6
     is_frozen: true
-    created_at: !php/eval return($now);
-    updated_at: !php/eval return($now);
+    created_at: !php/eval return($now->gmtTimestamp());
+    updated_at: !php/eval return($now->gmtTimestamp());
 
 journal_entry2:
     shift_slug: shift2
@@ -13,8 +13,8 @@ journal_entry2:
     shift_duration: 3600
     volunteers_count: null
     is_frozen: false
-    created_at: !php/eval return($now);
-    updated_at: !php/eval return($now);
+    created_at: !php/eval return($now->gmtTimestamp());
+    updated_at: !php/eval return($now->gmtTimestamp());
 
 journal_entry3:
     shift_slug: shift3
@@ -22,8 +22,8 @@ journal_entry3:
     shift_duration: 3600
     volunteers_count: null
     is_frozen: false
-    created_at: !php/eval return($now);
-    updated_at: !php/eval return($now);
+    created_at: !php/eval return($now->gmtTimestamp());
+    updated_at: !php/eval return($now->gmtTimestamp());
 
 journal_entry4:
     shift_slug: shift4
@@ -31,5 +31,5 @@ journal_entry4:
     shift_duration: 3600
     volunteers_count: null
     is_frozen: false
-    created_at: !php/eval return($now);
-    updated_at: !php/eval return($now);
+    created_at: !php/eval return($now->gmtTimestamp());
+    updated_at: !php/eval return($now->gmtTimestamp());

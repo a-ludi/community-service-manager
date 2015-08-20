@@ -1,0 +1,21 @@
+root:
+  user_login: root
+  user_pass: !php/eval return(wp_hash_password('root'));
+  user_nicename: root
+  user_email: root@example.com
+  user_url: http://example.com/
+  user_registered: !php/eval return($now->format(SimpleDateTime::SQL_FORMAT));
+  user_activation_key: ""
+  user_status: 0
+  display_name: root
+
+volunteer1:
+  user_login: volunteer1
+  user_pass: !php/eval return(wp_hash_password('volunteer1'));
+  user_nicename: volunteer1
+  user_email: volunteer1@example.com
+  user_url: http://example.com/
+  user_registered: !php/eval return($now->format(SimpleDateTime::SQL_FORMAT));
+  user_activation_key: ""
+  user_status: 0
+  display_name: volunteer1

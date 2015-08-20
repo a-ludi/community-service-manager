@@ -37,7 +37,7 @@ abstract class CSM_UnitTestCase extends UnitTestCase {
       self::$_fixtures = new SimpleYamlFixtures(self::$_dbh);
       self::$fixture_dir = plugin_dir_path(CSM_PLUGIN_FILE).'/tests/fixtures/';
       self::$php_env = array(
-        'now' => (new SimpleDateTime())->gmtTimestamp(),
+        'now' => new SimpleDateTime(),
         'secs_per_min' => 60,
         'secs_per_hour' => 60*60,
         'secs_per_day' => 60*60*24,
