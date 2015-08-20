@@ -21,18 +21,31 @@
     if(array_get($_REQUEST, 'action') !== 'csm-tests')
       return;
 
+
     csm_adjust_wpdb_debug_output();
+    csm_adjust_php_error_output();
     $suites = array(
       new CSM_UnitTests()
     );
+
+    csm_run_suites($suites);
+    exit();
+  }
+
+  function csm_run_suites($suites) {
+    $success = true;
     foreach($suites as $suite)
-      $suite->run(csm_get_decorator());
-    die();
+      $success = $success && $suite->run(csm_get_decorator());
+    return $success;
+  }
+
+  function csm_adjust_php_error_output() {
+    ini_set('html_errors', 'html' == array_get($_GET, 'f', 'html'));
   }
 
   function csm_adjust_wpdb_debug_output() {
     global $wpdb;
-    $wpdb->set_output(isset($_GET['f']) ? $_GET['f'] : 'html');
+    $wpdb->format = array_get($_GET, 'f', 'html');
   }
 
   function csm_get_decorator() {
