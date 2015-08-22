@@ -1,0 +1,97 @@
+root_meta_first_name:
+  user_id: '&root'
+  meta_key: first_name
+  meta_value: John
+root_meta_last_name:
+  user_id: '&root'
+  meta_key: last_name
+  meta_value: Doe
+root_meta_nickname:
+  user_id: '&root'
+  meta_key: nickname
+  meta_value: johnny
+root_meta_description:
+  user_id: '&root'
+  meta_key: description
+  meta_value: "I'm the root of all evil."
+root_meta_rich_editing:
+  user_id: '&root'
+  meta_key: rich_editing
+  meta_value: true
+root_meta_comment_shortcuts:
+  user_id: '&root'
+  meta_key: comment_shortcuts
+  meta_value: false
+root_meta_admin_color:
+  user_id: '&root'
+  meta_key: admin_color
+  meta_value: fresh
+root_meta_use_ssl:
+  user_id: '&root'
+  meta_key: use_ssl
+  meta_value: 0
+root_meta_show_admin_bar_front:
+  user_id: '&root'
+  meta_key: show_admin_bar_front
+  meta_value: true
+root_meta_wp_capabilities:
+  user_id: '&root'
+  meta_key: wp_capabilities
+  meta_value: 'a:1:{s:13:"administrator";b:1;}'
+root_meta_wp_user_level:
+  user_id: '&root'
+  meta_key: wp_user_level
+  meta_value: 10
+root_meta_show_welcome_panel:
+  user_id: '&root'
+  meta_key: show_welcome_panel
+  meta_value: 0
+
+volunteer1_meta_first_name:
+  user_id: '&volunteer1'
+  meta_key: first_name
+  meta_value: Johann Sebastian
+volunteer1_meta_last_name:
+  user_id: '&volunteer1'
+  meta_key: last_name
+  meta_value: Bach
+volunteer1_meta_nickname:
+  user_id: '&volunteer1'
+  meta_key: nickname
+  meta_value: luvmusix
+volunteer1_meta_description:
+  user_id: '&volunteer1'
+  meta_key: description
+  meta_value: "Music makes the people."
+volunteer1_meta_rich_editing:
+  user_id: '&volunteer1'
+  meta_key: rich_editing
+  meta_value: true
+volunteer1_meta_comment_shortcuts:
+  user_id: '&volunteer1'
+  meta_key: comment_shortcuts
+  meta_value: false
+volunteer1_meta_admin_color:
+  user_id: '&volunteer1'
+  meta_key: admin_color
+  meta_value: fresh
+volunteer1_meta_use_ssl:
+  user_id: '&volunteer1'
+  meta_key: use_ssl
+  meta_value: 0
+volunteer1_meta_show_admin_bar_front:
+  user_id: '&volunteer1'
+  meta_key: show_admin_bar_front
+  meta_value: true
+volunteer1_meta_wp_capabilities:
+  user_id: '&volunteer1'
+  meta_key: wp_capabilities
+  meta_value: 'a:1:{s:13:"administrator";b:1;}'
+volunteer1_meta_wp_user_level:
+  user_id: '&volunteer1'
+  meta_key: wp_user_level
+  meta_value: 10
+volunteer1_meta_show_welcome_panel:
+  user_id: '&volunteer1'
+  meta_key: show_welcome_panel
+  meta_value: 0
