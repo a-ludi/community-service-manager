@@ -91,7 +91,7 @@ function assert_count($ary, $count, $msg=null) {
       $msg .= 'count >= '.$min;
     else
       $msg .= $min.' <= count <= '.$max;
-    $msg .= ' [got: '.$count.']';
+    $msg .= ' [got: '.count($ary).']';
   }
 
   return assert_true($result, $msg);
