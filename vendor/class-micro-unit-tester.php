@@ -68,6 +68,38 @@ function assert_differ($obj1, $obj2, $msg=null) {
   return assert_true($result, $msg);
 }
 
+function assert_is_a($obj, $exp_type, $msg=null) {
+  $result = false;
+  $obj_type = gettype($obj);
+  switch(gettype($obj)) {
+    case 'boolean':
+    case 'integer':
+    case 'double':
+    case 'string':
+    case 'array':
+    case 'resource':
+    case 'NULL':
+      $result = $obj_type == $exp_type;
+      break;
+    case 'object':
+      $result = is_a($obj, $exp_type);
+      $obj_type = get_class($obj);
+      break;
+    default:
+      $result = false;
+      break;
+  }
+  if(is_null($msg) && ! $result) {
+    $msg = 'Expexted argument [is a: ';
+    $msg .= $exp_type;
+    $msg .= '] but [got: ';
+    $msg .= $obj_type;
+    $msg .= ']';
+  }
+
+  return assert_true($result, $msg);
+}
+
 function assert_count($ary, $count, $msg=null) {
   if(is_int($count)) {
     $min = $count;
