@@ -16,15 +16,45 @@
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 
-class CSM_UnitTests extends CSM_TestSuite {
+Mock::generatePartial(
+  'CSM_Person',
+  'CSM_MockPerson',
+  array(
+    // additional methods go here
+  )
+);
+class TestPerson extends CSM_UnitTestCase {
+  use DateTimeAssertions;
+
   function __construct() {
-    parent::__construct('CSM All Tests');
-    $this->addFile('unit/test-journal-entry.php');
-    $this->addFile('unit/test-journal.php');
-    $this->addFile('unit/test-abstract-db-manager.php');
-    $this->addFile('unit/test-db-manager.php');
-    $this->addFile('unit/test-person.php');
+    parent::__construct(array(
+      'wp_users',
+      'wp_usermeta'
+    ));
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->person = new CSM_MockPerson();
+  }
+
+  function test_journal_entry_exists() {
+    $this->assertTrue(
+      class_exists('CSM_Person'),
+      'Class CSM_Person should exist'
+    );
+  }
+
+  function test_set_and_get_slug() {
+    global $wpdb;
+
+    $this->person->slug = null;
+    $this->assertEqual($this->person->slug, null);
+
+    $this->person->slug = 'root';
+    $this->assertEqual($this->person->slug, 'root');
   }
 }
 ?>

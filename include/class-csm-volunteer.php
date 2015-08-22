@@ -16,15 +16,11 @@
  * You should have received a copy of the GNU General Public License along
  * with Community Service Manager. If not, see <http://www.gnu.org/licenses/>.
  */
+csm_prevent_direct_execution();
 
-class CSM_UnitTests extends CSM_TestSuite {
-  function __construct() {
-    parent::__construct('CSM All Tests');
-    $this->addFile('unit/test-journal-entry.php');
-    $this->addFile('unit/test-journal.php');
-    $this->addFile('unit/test-abstract-db-manager.php');
-    $this->addFile('unit/test-db-manager.php');
-    $this->addFile('unit/test-person.php');
+class CSM_Volunteer extends CSM_Person {
+  public function __construct($values=array()) {
+    parent::__construct($values);
   }
 }
 ?>
