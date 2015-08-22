@@ -35,24 +35,9 @@ if(! function_exists('csm_prevent_direct_execution')) {
   }
 }
 
-if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
-  if(defined('CSM_LOG_FILE') && '' != CSM_LOG_FILE) {
-    function csm_log($message) {
-      error_log(
-        date('[Y-m-d H:i:s] ').$message.PHP_EOL,
-        3, // use output file
-        CSM_LOG_FILE);
-    }
-  } else {
-    function csm_log($message) {
-      error_log(date('[Y-m-d H:i:s] ').$message.PHP_EOL);
-    }
-  }
-} else {
-  function csm_log($message) {}
-}
-
 define('CSM_PLUGIN_FILE', __FILE__);
+if(defined('WP_DEBUG') && true === WP_DEBUG)
+  include_once plugin_dir_path(__FILE__).'/include/functions-debug.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-active-data.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-html-builder.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-calendar-view.php';
