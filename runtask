@@ -98,6 +98,15 @@ function fetch_flags() {
       -w|--watch)
         add_flag 'watch'
         ;;
+      -o|--file=*)
+        add_flag 'file_out'
+        if [[ "$(peek_params)" =~ --file=(.*) ]]; then
+          FILE_OUT="${BASH_REMATCH[1]}"
+        else
+          shift_params
+          FILE_OUT="$(peek_params)"
+        fi
+        ;;
       *)
         return
         ;;
@@ -228,9 +237,17 @@ function run_tests() {
   CMD='curl'
 
   if has_flag 'watch'; then
-    watch_files "$CMD '$URL'" "${SOURCE_FILES[@]}"
+    if has_flag 'file_out'; then
+      watch_files "$CMD '$URL' 2> /dev/null 1> $FILE_OUT" "${SOURCE_FILES[@]}"
+    else
+      watch_files "$CMD '$URL' 2> /dev/null" "${SOURCE_FILES[@]}"
+    fi
   else
-    "$CMD" "$URL"
+    if has_flag 'file_out'; then
+      "$CMD" "$URL" 2> /dev/null 1> "$FILE_OUT"
+    else
+      "$CMD" "$URL" 2> /dev/null
+    fi
   fi
 }
 
