@@ -18,7 +18,10 @@
  */
 
 abstract class CSM_UnitTestCase extends UnitTestCase {
-  const AUTO_ID_FIXTURES = 'wp_csm_journal';
+  public static $auto_id_fixtures = array(
+    'wp_csm_journal' => true,
+    'wp_usermeta' => 'umeta_id'
+  );
   private static $_dbh;
   private static $_fixtures = null;
   private static $fixture_dir;
@@ -47,11 +50,13 @@ abstract class CSM_UnitTestCase extends UnitTestCase {
       $fixture_files = preg_grep('/.*\.yml$/', scandir(self::$fixture_dir));
       foreach($fixture_files as $fixture_file) {
         $table = basename($fixture_file, '.yml');
+        $auto_id_column = array_get(self::$auto_id_fixtures, $table, false);
         self::$_fixtures->enqueue_yaml(
           $table,
           self::$fixture_dir.$fixture_file,
           array(
-            'auto_id' => false !== strpos(self::AUTO_ID_FIXTURES, $table),
+            'auto_id' => $auto_id_column,
+            'id_column' => is_string($auto_id_column) ? $auto_id_column : 'id',
             'auto_ref' => true,
             'php_env' => self::$php_env
           )
