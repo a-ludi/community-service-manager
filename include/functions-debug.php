@@ -32,26 +32,36 @@ if(defined('WP_DEBUG_LOG') && true === WP_DEBUG_LOG) {
   function csm_log($message) {}
 }
 
-function csm_dbg_print($string, $opts=array()) {
-  list($strings, $opts) = csm_dbg_extract_options(func_get_args(), array(
-    'sep' => ' ',
-    'end' => PHP_EOL
-  ));
-  
-  echo join($opts['sep'], $strings).$opts['end'];
+if(defined('WP_DEBUG') && true === WP_DEBUG) {
+  function csm_dbg_print($string, $opts=array()) {
+    list($strings, $opts) = csm_dbg_extract_options(func_get_args(), array(
+      'sep' => ' ',
+      'end' => PHP_EOL
+    ));
+    
+    echo join($opts['sep'], $strings).$opts['end'];
+  }
+} else {
+  function csm_dbg_print($string, $opts=array()) { func_get_args(); }
 }
 
-function csm_dbg_dump($vars) {
-  call_user_func_array('var_dump', func_get_args());
+if(defined('WP_DEBUG') && true === WP_DEBUG) {
+  function csm_dbg_dump($vars) {
+    call_user_func_array('var_dump', func_get_args());
+  }
+} else {
+  function csm_dbg_dump($vars) { func_get_args(); }
 }
 
-function csm_dbg_extract_options($args, $default_opts) {
-  $last_arg = $args[count($args) - 1];
-  $opts = is_array($last_arg) ? $last_arg : array();
-  if(is_array($last_arg))
-    unset($args[count($args) - 1]);
-  $opts = array_merge($default_opts, $opts);
+if(defined('WP_DEBUG') && true === WP_DEBUG) {
+  function csm_dbg_extract_options($args, $default_opts) {
+    $last_arg = $args[count($args) - 1];
+    $opts = is_array($last_arg) ? $last_arg : array();
+    if(is_array($last_arg))
+      unset($args[count($args) - 1]);
+    $opts = array_merge($default_opts, $opts);
 
-  return array($args, $opts);
+    return array($args, $opts);
+  }
 }
 ?>
