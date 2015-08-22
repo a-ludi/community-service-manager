@@ -185,7 +185,20 @@ class SimpleFixtures {
   }
 
   public static function get_auto_id($name) {
-    return intval(hash('crc32', $name), 16);
+    return self::reduce_to_32bit_int(hash('sha256', $name));
+  }
+
+  protected static function reduce_to_32bit_int($hex_string) {
+    $int = 0;
+    for($i = 0; $i < strlen($hex_string)/8; $i += 8) {
+      $chunk = substr($hex_string, $i, 8);
+      // ignore first bit (sign bit)
+      if('8' <= $chunk[0] && $chunk[0] <= 'f')
+        $chunk[0] = (string) (intval($chunk[0], 16) - 8);
+      $int = $int ^ intval($chunk, 16);
+    }
+
+    return $int;
   }
 
   public function get($table, $row_name=null) {
@@ -356,8 +369,8 @@ YAML
         case 'user_friends':
           return(<<<YAML
 -
-  user_id: &ernie
-  friend_id: &bert
+  user_id: '&ernie'
+  friend_id: '&bert'
 YAML
           );
         default:
@@ -373,10 +386,9 @@ YAML
     $auto_id1 = SimpleFixtures::get_auto_id('foobar');
     $auto_id2 = SimpleFixtures::get_auto_id('foobar');
 
-    return array(
-      'auto_id_is_int' => is_int($auto_id1) && is_int($auto_id2),
-      'auto_id_is_deterministic' => $auto_id1 === $auto_id2
-    );
+    assert_is_a($auto_id1, 'integer');
+    assert_is_a($auto_id2, 'integer');
+    assert_equal($auto_id1, $auto_id2);
   }
   
   function test_insert_fixtures_with_auto_id() {
@@ -426,12 +438,9 @@ YAML
       query('SELECT * FROM user_friends')->
       fetchAll(PDO::FETCH_ASSOC);
 
-    return array(
-      'inserted_row' => count($user_friends) === 1,
-      'replaced_auto_ref' =>
-        $user_friends[0]['user_id'] == SimpleFixtures::get_auto_id('ernie') &&
-        $user_friends[0]['friend_id'] == SimpleFixtures::get_auto_id('bert')
-    );
+    assert_count($user_friends, 1);
+    assert_equal($user_friends[0]['user_id'], SimpleFixtures::get_auto_id('ernie'));
+    assert_equal($user_friends[0]['friend_id'], SimpleFixtures::get_auto_id('bert'));
   }
   
   function test_insert_merged_fixtures() {
@@ -626,6 +635,25 @@ YAML
         fetchAll(PDO::FETCH_ASSOC);
 
       assert_equal($users[0]['created_at'], $now - 7*SECS_PER_DAY);
+    }
+
+  
+    function test_insert_yaml_fixtures_with_auto_ref() {
+      $dbh = TestDB::get_instance();
+      $yaml_file = $dbh->get_test_file_yaml('user_friends');
+      $data = $dbh->get_test_data('user_friends');
+      $fixtures = new SimpleYamlFixtures($dbh);
+      $fixtures->enqueue_yaml('user_friends', $yaml_file, array(
+        'auto_id' => false
+      ));
+      $fixtures->load('user_friends');
+      $user_friends = $dbh->
+        query('SELECT * FROM user_friends')->
+        fetchAll(PDO::FETCH_ASSOC);
+
+      assert_count($user_friends, 1);
+      assert_equal($user_friends[0]['user_id'], SimpleFixtures::get_auto_id('ernie'));
+      assert_equal($user_friends[0]['friend_id'], SimpleFixtures::get_auto_id('bert'));
     }
   }
 
