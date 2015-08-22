@@ -36,8 +36,7 @@ if(! function_exists('csm_prevent_direct_execution')) {
 }
 
 define('CSM_PLUGIN_FILE', __FILE__);
-if(defined('WP_DEBUG') && true === WP_DEBUG)
-  include_once plugin_dir_path(__FILE__).'/include/functions-debug.php';
+include_once plugin_dir_path(__FILE__).'/include/functions-debug.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-active-data.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-html-builder.php';
 include_once plugin_dir_path(__FILE__).'/vendor/class-simple-calendar-view.php';
