@@ -40,7 +40,7 @@ class TestPerson extends CSM_UnitTestCase {
     $this->person = new CSM_MockPerson();
   }
 
-  function test_journal_entry_exists() {
+  function test_person_exists() {
     $this->assertTrue(
       class_exists('CSM_Person'),
       'Class CSM_Person should exist'
@@ -48,13 +48,31 @@ class TestPerson extends CSM_UnitTestCase {
   }
 
   function test_set_and_get_slug() {
-    global $wpdb;
-
-    $this->person->slug = null;
-    $this->assertEqual($this->person->slug, null);
-
     $this->person->slug = 'root';
     $this->assertEqual($this->person->slug, 'root');
+  }
+
+  function test_set_and_get_first_name() {
+    $this->person->first_name = 'John';
+    $this->assertEqual($this->person->first_name, 'John');
+  }
+
+  function test_set_and_get_last_name() {
+    $this->person->last_name = 'Doe';
+    $this->assertEqual($this->person->last_name, 'Doe');
+  }
+
+  function test_set_and_get_display_name() {
+    $this->person->display_name = 'Johnny';
+    $this->assertEqual($this->person->display_name, 'Johnny');
+  }
+
+  function test_set_and_get_contact_methods() {
+    $this->person->contact_methods = array('email' => 'root@example.com');
+    $this->assertEqual(
+      $this->person->contact_methods,
+      array('email' => 'root@example.com')
+      );
   }
 }
 ?>
