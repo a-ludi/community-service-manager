@@ -21,7 +21,6 @@
     if(array_get($_REQUEST, 'action') !== 'csm-tests')
       return;
 
-
     csm_adjust_wpdb_debug_output();
     csm_adjust_php_error_output();
     $suites = array(
@@ -40,12 +39,12 @@
   }
 
   function csm_adjust_php_error_output() {
-    ini_set('html_errors', 'html' == array_get($_GET, 'f', 'html'));
+    ini_set('html_errors', 'html' == csm_get_format());
   }
 
   function csm_adjust_wpdb_debug_output() {
     global $wpdb;
-    $wpdb->format = array_get($_GET, 'f', 'html');
+    $wpdb->format = csm_get_format();
   }
 
   function csm_get_decorator() {
@@ -63,17 +62,25 @@
       'text' => 'TextReporter'
     );
 
-    if(is_null($reporter)) {
-      $case = isset($_GET['c']) ? $_GET['c'] : null;
-      $test = isset($_GET['t']) ? $_GET['t'] : null;
-      $format = isset($_GET['f']) && isset($formats[strtolower($_GET['f'])]) ?
-        $formats[strtolower($_GET['f'])] :
-        $formats['html'];
-      $format = SimpleTest::preferred($format);
-
-      $reporter = new SelectiveReporter($format, $case, $test);
-    }
+    if(is_null($reporter))
+      $reporter = new SelectiveReporter(
+        SimpleTest::preferred($formats[csm_get_format()]),
+        csm_get_case(),
+        csm_get_test()
+      );
 
     return $reporter;
+  }
+
+  function csm_get_case() {
+    return array_get($_GET, 'c');
+  }
+
+  function csm_get_test() {
+    return array_get($_GET, 't');
+  }
+
+  function csm_get_format() {
+    return strtolower(array_get($_GET, 'f', 'html'));
   }
 ?>

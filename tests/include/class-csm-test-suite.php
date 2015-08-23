@@ -18,7 +18,7 @@
  */
 
 class CSM_TestSuite extends TestSuite {
-  function __construct($title='CSM Tests') {
+  function __construct($title=false) {
     parent::__construct($title);
   }
 

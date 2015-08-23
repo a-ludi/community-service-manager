@@ -19,7 +19,7 @@
 
 class CSM_UnitTests extends CSM_TestSuite {
   function __construct() {
-    parent::__construct('CSM All Tests');
+    parent::__construct();
     $this->addFile('unit/test-journal-entry.php');
     $this->addFile('unit/test-journal.php');
     $this->addFile('unit/test-abstract-db-manager.php');
