@@ -54,6 +54,20 @@ function assert_equal($obj1, $obj2, $msg=null) {
   return assert_true($result, $msg);
 }
 
+function assert_identical($obj1, $obj2, $msg=null) {
+  $result = $obj1 === $obj2;
+  if(is_null($msg) && ! $result) {
+    $msg = 'Expexted identity ';
+    $msg .= ' [got: ';
+    $msg .= mut_safe_to_string($obj1);
+    $msg .= ' !== ';
+    $msg .= mut_safe_to_string($obj2);
+    $msg .= ']';
+  }
+
+  return assert_true($result, $msg);
+}
+
 function assert_differ($obj1, $obj2, $msg=null) {
   $result = $obj1 != $obj2;
   if(is_null($msg) && ! $result) {
@@ -130,38 +144,10 @@ function assert_count($ary, $count, $msg=null) {
 }
 
 function expect_error($callback, $error=null, $msg=null) {
-  if(is_string($error)) {
-    $error = array('match' => $error);
-  } elseif(is_int($error)) {
-    $error = array('severity' => $error);
-  } elseif(! is_array($error)) {
-    $error = array();
-  }
-
-    $last_error = array(
-      'severity' => 0,
-      'message' => '',
-      'matched' => false,
-      'match' => null
-    );
-  $old_error_handler = set_error_handler(function ($severity, $message) use ($error, &$last_error) {
-    $match = array(
-      'severity' => ! isset($error['severity']) || $error['severity'] === $severity,
-      'message' => ! isset($error['match']) || preg_match($error['match'], $message)
-    );
-
-    $last_error = array(
-      'severity' => $severity,
-      'message' => $message,
-      'matched' => $match['severity'] && $match['message'],
-      'match' => $match
-    );
-  });
-  call_user_func($callback);
-  set_error_handler($old_error_handler);
+  $last_error = mut_fetch_last_error($callback, $error);
 
   if(is_null($msg) && ! $last_error['matched']) {
-    $msg = 'Expexted error';
+    $msg = 'Expected error';
     if(is_null($last_error['match'])) {
       $msg .= ' [got: none]';
     } else {
@@ -182,7 +168,65 @@ function expect_error($callback, $error=null, $msg=null) {
       }
     }
   }
-  return assert_true(! $last_error['matched'], $msg);
+  return assert_true($last_error['matched'], $msg);
+}
+
+function expect_no_error($callback, $error=null, $msg=null) {
+  $last_error = mut_fetch_last_error($callback, $error);
+
+  if(is_null($msg) && ! $last_error['matched']) {
+    $msg = 'Expected no error';
+    if(! $last_error['match']['message']) {
+      $msg .= ' matching '.$error['match'];
+      $msg .= ' [got: ';
+      $msg .= empty($last_error['message']) ?
+        'none' :
+        $last_error['message'];
+      $msg .= ']';
+    }
+    if(! $last_error['match']['severity']) {
+      $msg .= ' with severity ';
+      $msg .= join(', ', mut_get_error_names($error['severity']));
+      $msg .= ' [got: ';
+      $msg .= join(', ', mut_get_error_names($last_error['severity']));
+      $msg .= ']';
+    }
+  }
+  return assert_false($last_error['matched'], $msg);
+}
+
+function mut_fetch_last_error($callback, $error=null) {
+  if(is_string($error)) {
+    $error = array('match' => $error);
+  } elseif(is_int($error)) {
+    $error = array('severity' => $error);
+  } elseif(! is_array($error)) {
+    $error = array();
+  }
+
+  $last_error = array(
+    'severity' => 0,
+    'message' => '',
+    'matched' => false,
+    'match' => null
+  );
+  $old_error_handler = set_error_handler(function ($severity, $message) use ($error, &$last_error) {
+    $match = array(
+      'severity' => ! isset($error['severity']) || $error['severity'] === $severity,
+      'message' => ! isset($error['match']) || preg_match($error['match'], $message)
+    );
+
+    $last_error = array(
+      'severity' => $severity,
+      'message' => $message,
+      'matched' => $match['severity'] && $match['message'],
+      'match' => $match
+    );
+  });
+  call_user_func($callback);
+  set_error_handler($old_error_handler);
+
+  return $last_error;
 }
 
 function mut_safe_to_string($value) {
