@@ -116,5 +116,39 @@ class TestPerson extends CSM_UnitTestCase {
       array('email' => 'root@example.com')
     );
   }
+
+  function test_default_value_updates_after_slug_change_for_first_name() {
+    $this->person->first_name;
+    $this->person->slug = 'volunteer1';
+    $this->assertEqual($this->person->first_name, 'Johann Sebastian');
+  }
+
+  function test_default_value_updates_after_slug_change_for_last_name() {
+    $this->person->last_name;
+    $this->person->slug = 'volunteer1';
+    $this->assertEqual($this->person->last_name, 'Bach');
+  }
+
+  function test_default_value_updates_after_slug_change_for_full_name() {
+    $this->person->full_name;
+    $this->person->slug = 'volunteer1';
+    // NOTE: this may depend on the current locale/language
+    $this->assertEqual($this->person->full_name, 'Johann Sebastian Bach');
+  }
+
+  function test_default_value_updates_after_slug_change_for_display_name() {
+    $this->person->display_name;
+    $this->person->slug = 'volunteer1';
+    $this->assertEqual($this->person->display_name, 'volunteer1');
+  }
+
+  function test_default_value_updates_after_slug_change_for_contact_methods() {
+    $this->person->contact_methods;
+    $this->person->slug = 'volunteer1';
+    $this->assertEqual(
+      $this->person->contact_methods,
+      array('email' => 'volunteer1@example.com')
+    );
+  }
 }
 ?>

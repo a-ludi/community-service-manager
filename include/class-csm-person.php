@@ -36,7 +36,14 @@ abstract class CSM_Person extends ActiveData {
 
   protected function filter_slug($slug) {
     $this->wp_user = get_user_by('login', (string) $slug);
-    // TODO clear read-only attributes
+    foreach(array(
+      'first_name',
+      'last_name',
+      'full_name',
+      'display_name',
+      'contact_methods'
+    ) as $attr)
+      $this->clear_property($attr);
     return (string) $slug;
   }
 
