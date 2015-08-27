@@ -83,6 +83,8 @@ if(! class_exists('ActiveData')) {
   }
 
   if(php_sapi_name() == 'cli') {
+    require_once 'class-micro-unit-tester.php';
+
     class TestActiveData extends ActiveData {
       public function __construct($names=null) {
         parent::__construct($names);
@@ -90,6 +92,10 @@ if(! class_exists('ActiveData')) {
 
       protected function get_default_foo() {
         return 'foo';
+      }
+
+      protected function get_default_foobar() {
+        return empty($this->foo) ? 'bar' : 'foo';
       }
 
       protected function get_baz() {
@@ -109,141 +115,92 @@ if(! class_exists('ActiveData')) {
       }
     }
 
-    function all(&$arr) {
-      foreach ($arr as $value)
-        if(! $value)
-          return false;
-      return true;
-    }
-
-    function not($bool) {
-      return ! $bool;
-    }
-
-    function assert_error($callback, $error_no=null) {
-      $error = false;
-      $old_error_handler = set_error_handler(function ($curr_error_no, $error_string) use (&$error, $error_no) {
-        $expected = is_null($error_no) || $error_no == $expected_error_no;
-        $error = $error || $expected;
-        $expected or print("Error: $error_string".PHP_EOL);
-      });
-      
-      call_user_func($callback);
-      
-      set_error_handler($old_error_handler);
-
-      return $error;
-    }
-
-    $unitTests = array();
-    
-    $unitTests['Get Property'] = function() {
+    function test_get_property() {
       $c = new TestActiveData();
       $c->force_set(array('foo' => 'foo', 'bar' => 'bar'));
 
-      return array(
-        'get_foo' => $c->foo === 'foo',
-        'get_bar' => $c->bar === 'bar'
-      );
-    };
+      assert_identical($c->foo, 'foo');
+      assert_identical($c->bar, 'bar');
+    }
 
-    $unitTests['Get Default Property'] = function() {
+    function test_get_default_property() {
       $c = new TestActiveData();
 
-      return $c->foo === 'foo';
-    };
+      assert_identical($c->foo, 'foo');
+    }
     
-    $unitTests['Get Undefined Property'] = function() {
+    function test_get_undefined_property() {
       $c = new TestActiveData();
 
-      return assert_error(function() use ($c) {
+      expect_error(function() use ($c) {
         $c->bar;
       });
-    };
+    }
     
-    $unitTests['Set Property'] = function() {
+    function test_set_property() {
       $c = new TestActiveData();
-      $c->foo = 'foo';
-      $c->bar = 'bar';
+      $c->foo = 'new_foo';
+      $c->bar = 'new_bar';
 
-      return array(
-        'get_foo' => $c->foo === 'foo',
-        'get_bar' => $c->bar === 'bar'
-      );
-    };
+      assert_identical($c->foo, 'new_foo');
+      assert_identical($c->bar, 'new_bar');
+    }
     
-    $unitTests['Set Data'] = function() {
+    function test_set_data() {
       $c = new TestActiveData();
       $c->set_data(array(
-        'foo' => 'foo',
-        'bar' => 'bar'
+        'foo' => 'new_foo',
+        'bar' => 'new_bar'
       ));
 
-      return array(
-        'get_foo' => $c->foo === 'foo',
-        'get_bar' => $c->bar === 'bar'
-      );
-    };
+      assert_identical($c->foo, 'new_foo');
+      assert_identical($c->bar, 'new_bar');
+    }
     
-    $unitTests['Restrict Properties'] = function() {
+    function test_restrict_properties() {
       $c = new TestActiveData(array('foo'));
 
-      return array(
-        'without_error' => ! assert_error(function() use ($c) {
+      expect_no_error(function() use ($c) {
           $c->foo = 'foo';
-        }),
-        'with_error' =>  assert_error(function() use ($c) {
+      });
+      expect_error(function() use ($c) {
           $c->bar = 'bar';
-        })
-      );
-    };
+      });
+    }
 
-    $unitTests['Is Property Set'] = function() {
+    function test_is_property_set() {
       $c = new TestActiveData();
 
-      return array(
-        'is_set_foo' => $c->is_set('foo'),
-        'is_set_bar' => ! $c->is_set('bar')
-      );
-    };
+      assert_true($c->is_set('foo'));
+      assert_false($c->is_set('bar'));
+    }
 
-    $unitTests['Clear Property'] = function() {
+    function test_clear_property() {
       $c = new TestActiveData();
-      $c->foo = 'bar';
-      $changed_property = $c->foo === 'bar';
+      $c->foo = 'new_foo';
+      assert_identical($c->foo, 'new_foo');
+
       $c->clear_foo();
-
-      return array(
-        'changed_property' => $changed_property,
-        'default_property' => $c->foo === 'foo'
-      );
+      assert_identical($c->foo, 'foo');
     };
 
-    
-    $failures = array();
-    $passedCount = 0;
-    foreach($unitTests as $name => $test) {
-      $testResults = call_user_func($test);
-      $hasPassed = is_array($testResults) ? all($testResults) : $testResults;
-      echo $name . ' Test ... ' . ($hasPassed ? 'passed' : 'failed') . PHP_EOL;
-      if($hasPassed)
-         $passedCount++;
-      else
-        $failures[$name] = $testResults;
-    }
-    
-    echo '---' . PHP_EOL;
-    echo 'Passed ' . $passedCount . ' of ' . count($unitTests) . ' tests.' . PHP_EOL;
-    if(count($failures) > 0) {
-      echo PHP_EOL;
-      echo 'Failures:'.PHP_EOL;
-      foreach($failures as $name => $results) {
-        $failedTests = implode(', ', array_keys(array_filter($results, 'not')));
-        echo '  failed in ' . $name . ' test: ' . $failedTests . PHP_EOL;
-      }
-    }
+    function test_save_default_value() {
+      $c = new TestActiveData();
+      assert_identical($c->foobar, 'foo');
+      $c->foo = '';
+      assert_identical($c->foobar, 'foo');
 
-    exit(count($unitTests) - $passedCount);
+      $c = new TestActiveData();
+      $c->foo = '';
+      assert_identical($c->foobar, 'bar');
+      $c->foo = 'non-empty';
+      assert_identical($c->foobar, 'bar');
+    };
+
+    $tester = new MicroUnitTester();
+    $tester->run_tests();
+
+    exit($tester->failed_tests);
   }
 }
 ?>
