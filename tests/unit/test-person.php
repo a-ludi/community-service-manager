@@ -38,6 +38,27 @@ class TestPerson extends CSM_UnitTestCase {
   function setUp() {
     parent::setUp();
     $this->person = new CSM_MockPerson();
+    $this->person->slug = 'root';
+  }
+
+  function assert_attr_read_only($obj, $attr_name, $test_value, $msg=null) {
+    if(is_null($msg))
+      $msg = 'Exepected %s not to change but [got: %s] after setting [to: %s] [from: %s]';
+
+    $old_value = @$obj->$attr_name;
+    $this->expectError();
+    $obj->$attr_name = $test_value;
+    $new_value = @$obj->$attr_name;
+
+    $dumper = new SimpleDumper();
+    $msg = sprintf(
+      $msg,
+      get_class($obj).'::$'.$attr_name,
+      $dumper->describeValue($new_value),
+      $dumper->describeValue($test_value),
+      $dumper->describeValue($old_value)
+    );
+    $this->assertEqual($old_value, $new_value, $msg);
   }
 
   function test_person_exists() {
@@ -48,31 +69,52 @@ class TestPerson extends CSM_UnitTestCase {
   }
 
   function test_set_and_get_slug() {
-    $this->person->slug = 'root';
-    $this->assertEqual($this->person->slug, 'root');
+    $this->person->slug = 'volunteer1';
+    $this->assertEqual($this->person->slug, 'volunteer1');
   }
 
-  function test_set_and_get_first_name() {
-    $this->person->first_name = 'John';
+  function test_first_name_is_read_only() {
+    $this->assert_attr_read_only($this->person, 'first_name', 'Chuck');
+  }
+
+  function test_last_name_is_read_only() {
+    $this->assert_attr_read_only($this->person, 'last_name', 'Norris');
+  }
+
+  function test_full_name_is_read_only() {
+    $this->assert_attr_read_only($this->person, 'full_name', 'Chuck Norris');
+  }
+
+  function test_display_name_is_read_only() {
+    $this->assert_attr_read_only($this->person, 'display_name', 'Walker');
+  }
+
+  function test_contact_methods_are_read_only() {
+    $this->assert_attr_read_only($this->person, 'contact_methods', array());
+  }
+
+  function test_default_value_for_first_name() {
     $this->assertEqual($this->person->first_name, 'John');
   }
 
-  function test_set_and_get_last_name() {
-    $this->person->last_name = 'Doe';
+  function test_default_value_for_last_name() {
     $this->assertEqual($this->person->last_name, 'Doe');
   }
 
-  function test_set_and_get_display_name() {
-    $this->person->display_name = 'Johnny';
-    $this->assertEqual($this->person->display_name, 'Johnny');
+  function test_default_value_for_full_name() {
+    // NOTE: this may depend on the current locale/language
+    $this->assertEqual($this->person->full_name, 'John Doe');
   }
 
-  function test_set_and_get_contact_methods() {
-    $this->person->contact_methods = array('email' => 'root@example.com');
+  function test_default_value_for_display_name() {
+    $this->assertEqual($this->person->display_name, 'root');
+  }
+
+  function test_default_value_for_contact_methods() {
     $this->assertEqual(
       $this->person->contact_methods,
       array('email' => 'root@example.com')
-      );
+    );
   }
 }
 ?>

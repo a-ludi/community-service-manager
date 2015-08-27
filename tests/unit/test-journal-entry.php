@@ -22,10 +22,7 @@ class TestJournalEntry extends CSM_UnitTestCase {
   use DateTimeAssertions;
 
   function __construct() {
-    parent::__construct(array(
-      // 'wp_csm_volunteers',
-      // 'wp_csm_shifts'
-    ));
+    parent::__construct(array());
   }
 
   function test_journal_entry_exists() {

@@ -20,6 +20,7 @@
 abstract class CSM_UnitTestCase extends UnitTestCase {
   public static $auto_id_fixtures = array(
     'wp_csm_journal' => true,
+    'wp_users' => true,
     'wp_usermeta' => 'umeta_id'
   );
   private static $_dbh;
