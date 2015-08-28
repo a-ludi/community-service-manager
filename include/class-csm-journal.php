@@ -140,8 +140,6 @@ class CSM_Journal {
     $table = $this->table_name();
     $columns = implode(",\n  ", $this->table_columns);
     $where_constraints = array_select($constraints, $this->table_columns);
-    foreach($where_constraints as $column => $value)
-      $where_constraints[$column] = $this->$value;
     $where = $this->mk_query_str($where_constraints);
     $limit = $this->mk_limit_clause($constraints);
 
