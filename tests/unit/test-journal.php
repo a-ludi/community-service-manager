@@ -18,7 +18,11 @@
  */
 csm_prevent_direct_execution();
 
-Mock::generate('CSM_JournalEntry', 'CSM_MockJournalEntry');
+Mock::generatePartial(
+  'CSM_Journal',
+  'CSM_MockJournal',
+  array('mk_row')
+);
 class TestJournal extends CSM_UnitTestCase {
   function __construct() {
     parent::__construct(array(
@@ -125,16 +129,18 @@ class TestJournal extends CSM_UnitTestCase {
       'created_at' => $this->env('now')->gmtTimestamp(),
       'updated_at' => $this->env('now')->gmtTimestamp()
     );
-    $mock_entry = new CSM_MockJournalEntry();
-    $mock_entry->returns('get_db_fields', $entry_data);
-    $mock_entry->expectAtLeastOnce;
+    $journal = new CSM_MockJournal();
+    $journal->returns('mk_row', $entry_data);
+    $journal->expectAtLeastOnce('mk_row');
+    $entry = (object) array('id' => null);
 
-    $this->journal->commit($mock_entry);
+    $journal->commit($entry);
 
     $row = $this->dbh->
       query('SELECT * FROM wp_csm_journal WHERE shift_slug = "shift42"')->
       fetch(PDO::FETCH_ASSOC);
     if($this->assertTrue($row)) {
+      $this->assertEqual($row['id'], $entry->id);
       $row['id'] = null;
       $this->assertEqual($row, $entry_data);
     }
@@ -151,11 +157,12 @@ class TestJournal extends CSM_UnitTestCase {
       'created_at' => $this->env('now')->gmtTimestamp(),
       'updated_at' => $this->env('now')->gmtTimestamp()
     );
-    $mock_entry = new CSM_MockJournalEntry();
-    $mock_entry->returns('get_db_fields', $entry_data);
-    $mock_entry->expectAtLeastOnce('get_db_fields');
+    $journal = new CSM_MockJournal();
+    $journal->returns('mk_row', $entry_data);
+    $journal->expectAtLeastOnce('mk_row');
+    $entry = (object) array('id' => $entry_data['id']);
 
-    $this->journal->commit($mock_entry);
+    $journal->commit($entry);
 
     $row = $this->dbh->
       query('SELECT * FROM wp_csm_journal WHERE id = '.$this->auto_id('journal_entry1'))->

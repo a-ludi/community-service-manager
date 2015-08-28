@@ -195,23 +195,9 @@ class CSM_Journal {
     return $wpdb->prepare("%d", $constraints['limit']);
   }
 
-  protected function mk_entry($row) {
-    if(is_null($row))
-      return null;
-    $row = (array) $row;
-
-    // Replace timestamps with DateTime objects
-    foreach(array('created_at', 'updated_at') as $col)
-      $row[$col] = SimpleDateTime::fromGmtTimestamp($row[$col]);
-
-    return new CSM_JournalEntry($row);
-  }
-
   public function commit($journal_entry) {
     global $wpdb;
-    // TODO move to journal
-    $row = $journal_entry->get_db_fields();
-
+    $row = $this->mk_row($journal_entry);
 
     $table = $this->table_name();
     $query = '';
@@ -253,6 +239,31 @@ class CSM_Journal {
       $journal_entry->id = $wpdb->insert_id;
     
     return true;
+  }
+
+  protected function mk_entry($row) {
+    if(is_null($row))
+      return null;
+    $row = (array) $row;
+
+    // Replace timestamps with DateTime objects
+    foreach(array('created_at', 'updated_at') as $col)
+      $row[$col] = SimpleDateTime::fromGmtTimestamp($row[$col]);
+
+    return new CSM_JournalEntry($row);
+  }
+
+  protected function mk_row($entry) {
+    return array(
+      'id' => $entry->id,
+      'shift_slug' => $entry->shift_slug,
+      'shift_duration' => $entry->shift_duration->seconds(),
+      'volunteer_slug' => $entry->volunteer_slug,
+      'volunteers_count' => $entry->volunteers_count,
+      'is_frozen' => $entry->is_frozen,
+      'created_at' => $entry->created_at->gmtTimestamp(),
+      'updated_at' => $entry->updated_at->gmtTimestamp()
+    );
   }
 }
 

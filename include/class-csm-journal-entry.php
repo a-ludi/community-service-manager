@@ -148,19 +148,6 @@ class CSM_JournalEntry extends ActiveData {
     // TODO get default shift duration -> needs shift first
     return null;
   }
-
-  public function get_db_fields() {
-    return array(
-      'id' => $this->id,
-      'shift_slug' => $this->shift_slug,
-      'shift_duration' => $this->shift_duration->seconds(),
-      'volunteer_slug' => $this->volunteer_slug,
-      'volunteers_count' => $this->volunteers_count,
-      'is_frozen' => $this->is_frozen,
-      'created_at' => $this->created_at->gmtTimestamp(),
-      'updated_at' => $this->updated_at->gmtTimestamp()
-    );
-  }
 }
 
 ?>

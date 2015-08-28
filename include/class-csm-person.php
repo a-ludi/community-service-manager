@@ -29,7 +29,7 @@ abstract class CSM_Person extends ActiveData {
   );
   protected $wp_user;
 
-  public function __construct($slug) {
+  protected function __construct($slug) {
     parent::__construct(self::$properties);
     $this->slug = $slug;
   }
