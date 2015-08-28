@@ -85,8 +85,7 @@ abstract class CSM_Person extends ActiveData {
   }
 
   protected function get_default_contact_methods() {
-    // TODO return CSM_ContactMethods
-    return null;
+    return new CSM_ContactMethods($this->wp_user->user_login);
   }
 
   protected function attribute_read_only($attr) {

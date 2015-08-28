@@ -112,8 +112,8 @@ class TestPerson extends CSM_UnitTestCase {
 
   function test_default_value_for_contact_methods() {
     $this->assertEqual(
-      $this->person->contact_methods,
-      array('email' => 'root@example.com')
+      $this->person->contact_methods->email,
+      'root@example.com'
     );
   }
 
@@ -146,8 +146,8 @@ class TestPerson extends CSM_UnitTestCase {
     $this->person->contact_methods;
     $this->person->slug = 'volunteer1';
     $this->assertEqual(
-      $this->person->contact_methods,
-      array('email' => 'volunteer1@example.com')
+      $this->person->contact_methods->email,
+      'volunteer1@example.com'
     );
   }
 }
