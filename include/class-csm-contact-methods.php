@@ -19,40 +19,34 @@
 csm_prevent_direct_execution();
 
 class CSM_ContactMethods extends ActiveData {
-  protected static $available_methods = null;
   protected $wp_user;
 
   public function __construct($person_slug) {
-    self::assert_available_methods_initialized();
     $this->wp_user = get_user_by('login', $person_slug);
   }
 
-  protected static function assert_available_methods_initialized() {
-    if(is_null(self::$available_methods)) {
-      self::$available_methods = array('email' => __('E-mail'));
-      self::$available_methods = array_merge(
-        self::$available_methods,
-        wp_get_user_contact_methods()
-      );
-    }
+  protected static function build_available_user_contact_methods() {
+    return array_merge(
+      array('email' => __('E-mail')),
+      wp_get_user_contact_methods()
+    );
   }
 
   public static function get_available() {
-    self::assert_available_methods_initialized();
-    return array_keys(self::$available_methods);
+    return array_keys(self::build_available_user_contact_methods());
   }
 
   public static function get_label($contact_method) {
-    self::assert_available_methods_initialized();
-    if(isset(self::$available_methods[$contact_method])) {
-      return self::$available_methods[$contact_method];
+    $available_methods = self::build_available_user_contact_methods();
+    if(isset($available_methods[$contact_method])) {
+      return $available_methods[$contact_method];
     } else {
       return self::trigger_method_not_registered($contact_method);
     }
   }
 
   public function __get($name) {
-    return isset(self::$available_methods[$name]) ?
+    return in_array($name, self::get_available()) ?
       $this->get_method_value($name) :
       self::trigger_method_not_registered($name);
   }
