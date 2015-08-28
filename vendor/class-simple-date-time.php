@@ -34,6 +34,15 @@ if(! class_exists('SimpleDateTime')) {
         parent::__construct($timeOrDateTime, $timezone);
     }
 
+    public static function fromGmtTimestamp($timestamp, $timezone=null) {
+      if(is_null($timezone))
+        $timezone = self::defaultTimezone();
+      $date_time = new self("@$timestamp", new DateTimeZone('UTC'));
+      $date_time->setTimezone($timezone);
+
+      return $date_time;
+    }
+
     public static function defaultTimezone($timezone=null) {
       if(is_null(self::$defaultTimezone))
         self::$defaultTimezone = self::getDefaultTimezone($timezone);
