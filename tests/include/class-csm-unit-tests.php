@@ -25,6 +25,7 @@ class CSM_UnitTests extends CSM_TestSuite {
     $this->addFile('unit/test-abstract-db-manager.php');
     $this->addFile('unit/test-db-manager.php');
     $this->addFile('unit/test-person.php');
+    $this->addFile('unit/test-contact-methods.php');
   }
 }
 ?>

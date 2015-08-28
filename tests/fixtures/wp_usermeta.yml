@@ -46,6 +46,11 @@ root_meta_show_welcome_panel:
   user_id: '&root'
   meta_key: show_welcome_panel
   meta_value: 0
+root_meta_phone_home:
+  user_id: '&root'
+  meta_key: phone_home
+  meta_value: '+00 0000 000000'
+
 
 volunteer1_meta_first_name:
   user_id: '&volunteer1'

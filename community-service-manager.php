@@ -50,6 +50,7 @@ include_once plugin_dir_path(__FILE__).'/include/class-csm-journal.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-journal-entry.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-abstract-db-manager.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-db-manager.php';
+include_once plugin_dir_path(__FILE__).'/include/class-csm-contact-methods.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-person.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-volunteer.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-coordinator.php';
