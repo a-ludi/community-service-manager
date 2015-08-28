@@ -38,6 +38,22 @@ class TestContactMethods extends CSM_UnitTestCase {
     );
   }
 
+  function test_get_available_contact_method_values() {
+    $contact_methods = new CSM_ContactMethods('root');
+    $this->assertEqual($contact_methods->email, 'root@example.com');
+    $this->assertEqual($contact_methods->phone_home, '+00 0000 000000');
+    $contact_methods = new CSM_ContactMethods('volunteer1');
+    $this->assertEqual($contact_methods->email, 'volunteer1@example.com');
+    $this->assertEqual($contact_methods->phone_home, null);
+  }
+
+  function test_get_unavailable_contact_method_values() {
+    $contact_methods = new CSM_ContactMethods('root');
+    $this->expectError();
+    $value = $contact_methods->unknown_method;
+    $this->assertNull($value);
+  }
+
   function test_get_available_returns_correct_methods() {
     $this->assertEqual(
       CSM_ContactMethods::get_available(),
@@ -57,22 +73,6 @@ class TestContactMethods extends CSM_UnitTestCase {
     $this->expectError();
     $label = CSM_ContactMethods::get_label('unknown_method');
     $this->assertNull($label);
-  }
-
-  function test_get_availble_contact_method_values() {
-    $contact_methods = new CSM_ContactMethods('root');
-    $this->assertEqual($contact_methods->email, 'root@example.com');
-    $this->assertEqual($contact_methods->phone_home, '+00 0000 000000');
-    $contact_methods = new CSM_ContactMethods('volunteer1');
-    $this->assertEqual($contact_methods->email, 'volunteer1@example.com');
-    $this->assertEqual($contact_methods->phone_home, null);
-  }
-
-  function test_get_unavailble_contact_method_values() {
-    $contact_methods = new CSM_ContactMethods('root');
-    $this->expectError();
-    $value = $contact_methods->unknown_method;
-    $this->assertNull($value);
   }
 }
 ?>

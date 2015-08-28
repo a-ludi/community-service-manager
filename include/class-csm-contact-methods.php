@@ -23,6 +23,7 @@ class CSM_ContactMethods extends ActiveData {
   protected $wp_user;
 
   public function __construct($person_slug) {
+    self::assert_available_methods_initialized();
     $this->wp_user = get_user_by('login', $person_slug);
   }
 
