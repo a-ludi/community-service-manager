@@ -111,7 +111,7 @@ class TestJournal extends CSM_UnitTestCase {
     );
 
     $this->assertIsA($entry, 'CSM_JournalEntry') and
-      $this->assertEqual($entry->slug, 'journal_entry1');
+      $this->assertEqual($entry->id, $this->auto_id('journal_entry1'));
   }
 
   function test_commit_new_entry() {
@@ -122,8 +122,8 @@ class TestJournal extends CSM_UnitTestCase {
       'volunteer_slug' => 'volunteer42',
       'volunteers_count' => 42,
       'is_frozen' => false,
-      'created_at' => $this->env('now'),
-      'updated_at' => $this->env('now')
+      'created_at' => $this->env('now')->gmtTimestamp(),
+      'updated_at' => $this->env('now')->gmtTimestamp()
     );
     $mock_entry = new CSM_MockJournalEntry();
     $mock_entry->returns('get_db_fields', $entry_data);
@@ -148,8 +148,8 @@ class TestJournal extends CSM_UnitTestCase {
       'volunteer_slug' => 'volunteer42',
       'volunteers_count' => 42,
       'is_frozen' => false,
-      'created_at' => $this->env('now'),
-      'updated_at' => $this->env('now')
+      'created_at' => $this->env('now')->gmtTimestamp(),
+      'updated_at' => $this->env('now')->gmtTimestamp()
     );
     $mock_entry = new CSM_MockJournalEntry();
     $mock_entry->returns('get_db_fields', $entry_data);
