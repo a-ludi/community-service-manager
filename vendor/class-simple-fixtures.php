@@ -65,7 +65,6 @@ class SimpleFixtures {
         );
     }
 
-    $this->dbh->beginTransaction();
     if(! $this->clear_table($table))
       trigger_error(
         "Could not clear table `$table`: ".$this->build_error_msg(),
@@ -81,7 +80,6 @@ class SimpleFixtures {
         );
       }
     }
-    $this->dbh->commit();
   }
 
   protected function get_fixture_columns($table) {
