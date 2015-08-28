@@ -58,11 +58,12 @@
   function csm_get_reporter() {
     static $reporter = null;
     static $formats = array(
-      'html' => 'HTMLReporter',
+      'html' => 'CSM_HtmlReporter',
       'text' => 'TextReporter'
     );
 
     if(is_null($reporter))
+      SimpleTest::prefer(new CSM_HtmlReporter());
       $reporter = new SelectiveReporter(
         SimpleTest::preferred($formats[csm_get_format()]),
         csm_get_case(),

@@ -35,6 +35,7 @@ if(version_compare(phpversion(), '5.4.0', '<')) {
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-unit-test-case.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-test-suite.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-unit-tests.php');
+  require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/class-csm-html-reporter.php');
   require_once(plugin_dir_path(CSM_PLUGIN_FILE).'/tests/include/functions.php');
 
   add_action('wp_loaded', 'csm_run_all_tests');
