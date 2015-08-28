@@ -32,7 +32,7 @@ class TestJournal extends CSM_UnitTestCase {
 
   function setUp() {
     parent::setUp();
-    $this->journal = CSM_Journal::get_instance();
+    $this->journal = CSM_Singleton::get('CSM_Journal');
   }
 
   function test_journal_exists() {
@@ -40,12 +40,6 @@ class TestJournal extends CSM_UnitTestCase {
       class_exists('CSM_Journal'),
       'Class CSM_Journal should exist'
     );
-  }
-
-  function test_get_instance() {
-    $this->assertNotNull($this->journal);
-    $this->assertIsA($this->journal, 'CSM_Journal');
-    $this->assertIdentical($this->journal, CSM_Journal::get_instance());
   }
 
   function test_table_name() {

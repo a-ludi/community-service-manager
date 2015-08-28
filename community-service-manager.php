@@ -46,6 +46,7 @@ include_once plugin_dir_path(__FILE__).'/vendor/class-simple-fixtures.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-array.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-html.php';
 include_once plugin_dir_path(__FILE__).'/vendor/functions-str.php';
+include_once plugin_dir_path(__FILE__).'/include/class-csm-singleton.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-journal.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-journal-entry.php';
 include_once plugin_dir_path(__FILE__).'/include/class-csm-abstract-db-manager.php';

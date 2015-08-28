@@ -19,25 +19,7 @@
 
 csm_prevent_direct_execution();
 
-add_action('csm_migrate_db', function() {
-  $journal = CSM_Journal::get_instance();
-  $journal->migrate();
-});
 class CSM_Journal {
-  private static $_instance = null;
-
-  /**
-   * Returns a calendar controller instance.
-   *
-   * @return CSM_CalendarsController Calendar controller.
-   */
-  public static function get_instance() {
-    if(is_null(self::$_instance))
-      self::$_instance = new self();
-
-    return self::$_instance;
-  }
-
   protected $table_columns = array(
     'id',
     'shift_slug',
@@ -266,5 +248,10 @@ class CSM_Journal {
     );
   }
 }
+CSM_Singleton::register(new CSM_Journal());
+add_action('csm_migrate_db', function() {
+  $journal = CSM_Singleton::get('CSM_Journal');
+  $journal->migrate();
+});
 
 ?>

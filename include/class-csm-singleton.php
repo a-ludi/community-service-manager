@@ -18,16 +18,21 @@
  */
 csm_prevent_direct_execution();
 
-class CSM_UnitTests extends CSM_TestSuite {
-  function __construct() {
-    parent::__construct();
-    $this->addFile('unit/test-journal-entry.php');
-    $this->addFile('unit/test-journal.php');
-    $this->addFile('unit/test-abstract-db-manager.php');
-    $this->addFile('unit/test-db-manager.php');
-    $this->addFile('unit/test-person.php');
-    $this->addFile('unit/test-contact-methods.php');
-    $this->addFile('unit/test-singleton.php');
+class CSM_Singleton {
+  protected static $singletons = array();
+
+  public static function register($obj) {
+    self::$singletons[get_class($obj)] = $obj;
+  }
+
+  public static function get($class) {
+    if(isset(self::$singletons[$class]))
+      return self::$singletons[$class];
+    else
+      trigger_error(
+        "Cannot get unregistered singleton of class '$class'",
+        E_USER_ERROR
+      );
   }
 }
 ?>
