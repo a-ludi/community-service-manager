@@ -65,6 +65,10 @@ class TestAbstractDBManager extends CSM_UnitTestCase {
     $this->use_wpdb('mock');
   }
 
+  function tearDown() {
+    $this->use_wpdb('original');
+  }
+
   function expectSetDBVersion($version='*', $msg=null) {
     if(is_null($msg))
       $msg = "Expected sets db version to [$version]";
