@@ -65,7 +65,7 @@ class CSM_JournalEntry extends ActiveData {
     elseif(is_null($value))
       return null;
     else {
-      trigger_error(__CLASS__.'::shift_duration must be positive', E_USER_NOTICE);
+      trigger_error(__CLASS__.'::$shift_duration must be positive', E_USER_NOTICE);
       return $this->shift_duration;
     }
   }
@@ -84,7 +84,7 @@ class CSM_JournalEntry extends ActiveData {
     if((int) $value >= 0) {
       return (int) $value;
     } else {
-      trigger_error(__CLASS__.'::volunteers_count must be non-negative', E_USER_NOTICE);
+      trigger_error(__CLASS__.'::$volunteers_count must be non-negative', E_USER_NOTICE);
       return $this->volunteers_count;
     }
   }
@@ -108,7 +108,7 @@ class CSM_JournalEntry extends ActiveData {
       return new SimpleDateTime($value);
     else
       trigger_error(
-        'Unexpected value for property '.__CLASS__.'::'.$property,
+        __CLASS__.'::$'.$property.' must be SimpleDateTime or DateTime',
         E_USER_NOTICE
       );
   }
