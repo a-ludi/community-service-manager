@@ -24,14 +24,14 @@ class TestContactMethods extends CSM_UnitTestCase {
       'wp_users',
       'wp_usermeta'
     ));
-  }
-
-  function setUp() {
-    parent::setUp();
     add_filter('user_contactmethods', function ($methods, $user=null) {
       $methods['phone_home'] = 'Phone (Home)';
       return $methods;
     });
+  }
+
+  function setUp() {
+    parent::setUp();
     $this->available_contact_methods = array(
       'email' => __('E-mail'),
       'phone_home' => 'Phone (Home)'
