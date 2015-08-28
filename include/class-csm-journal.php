@@ -198,13 +198,20 @@ class CSM_Journal {
   protected function mk_entry($row) {
     if(is_null($row))
       return null;
+    $row = (array) $row;
 
-    return new CSM_JournalEntry((array) $row);
+    // Replace timestamps with DateTime objects
+    foreach(array('created_at', 'updated_at') as $col)
+      $row[$col] = SimpleDateTime::fromGmtTimestamp($row[$col]);
+
+    return new CSM_JournalEntry($row);
   }
 
   public function commit($journal_entry) {
     global $wpdb;
+    // TODO move to journal
     $row = $journal_entry->get_db_fields();
+
 
     $table = $this->table_name();
     $query = '';
