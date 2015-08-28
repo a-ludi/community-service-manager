@@ -20,7 +20,7 @@ if(! class_exists('ActiveData')) {
     private $data;
     private $properties;
 
-    public function __construct($properties=null) {
+    protected function __construct($properties=null) {
       $this->data = array();
       $this->properties = is_array($properties) ?
         array_values($properties) :
