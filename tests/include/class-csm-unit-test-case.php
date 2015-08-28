@@ -76,6 +76,13 @@ abstract class CSM_UnitTestCase extends UnitTestCase {
     $this->fixtures->load($this->which_fixtures);
   }
 
+  function createInvoker() {
+    if(isset($_GET['notrap']))
+      return new SimpleInvoker($this);
+    else
+      return parent::createInvoker($this);
+  }
+
   function env($name) {
     return self::$php_env[$name];
   }
