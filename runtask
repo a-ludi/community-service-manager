@@ -223,11 +223,11 @@ EOF
 
 function run_tests() {
   QUERY='action=csm-tests&f=text';
-  if [[ -n "$(peek_params)" ]]; then
+  if peek_params > /dev/null; then
     QUERY="$QUERY&c=$(peek_params)"
     shift_params
 
-    if [[ -n "$(peek_params)" ]]; then
+    if peek_params > /dev/null; then
       QUERY="$QUERY&t=$(peek_params)"
       shift_params
     fi
@@ -272,16 +272,16 @@ class $CLASS {
     assert(false, 'Call to unimplemented Method $CLASS::__construct().'); // TODO
   }
 EOF
-  if [[ -n "$@" ]]; then
-    for METHOD in "$@"; do
+  while peek_params > /dev/null; do
+      local METHOD="$(peek_params)"
+      shift_params
       cat >> "$FULL_PATH" <<EOF
 
   public function $METHOD() {
     assert(false, 'Call to unimplemented Method $CLASS::$METHOD().'); // TODO
   }
 EOF
-    done
-  fi 
+  done
   cat >> "$FULL_PATH" <<EOF
 }
 ${PHP_FOOTER}
